@@ -1,0 +1,105 @@
+<?php
+require_once __DIR__ . '/../app/core/db.php';
+require_once __DIR__ . '/../app/core/functions.php';
+require_once __DIR__ . '/../app/core/csrf.php';
+require_once __DIR__ . '/../app/includes/header.php';
+
+csrf_init();
+
+$errors = [];
+$old = ['full_name'=>'', 'email'=>'', 'phone'=>''];
+
+if (is_post()) {
+    csrf_verify();
+
+    $full_name = trim($_POST['full_name'] ?? '');
+    $email     = trim($_POST['email'] ?? '');
+    $phone     = trim($_POST['phone'] ?? '');
+    $password  = $_POST['password'] ?? '';
+    $confirm   = $_POST['confirm_password'] ?? '';
+
+    $old = ['full_name'=>$full_name, 'email'=>$email, 'phone'=>$phone];
+
+    if ($full_name === '') $errors[] = "Full name is required.";
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Valid email is required.";
+    if ($password === '' || strlen($password) < 6) $errors[] = "Password must be at least 6 characters.";
+    if ($password !== $confirm) $errors[] = "Passwords do not match.";
+
+    if (!$errors) {
+        $stmt = db()->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+
+        if ($stmt->fetch()) {
+            $errors[] = "Email already registered. Please login.";
+        } else {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+
+            $stmt = db()->prepare("
+                INSERT INTO users (full_name, email, phone, password_hash, role, status)
+                VALUES (?, ?, ?, ?, 'user', 'active')
+            ");
+            $stmt->execute([$full_name, $email, $phone ?: null, $hash]);
+
+            redirect('/public/login.php?registered=1');
+        }
+    }
+}
+?>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 fw-bold mb-3">User Registration</h1>
+
+        <?php if ($errors): ?>
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              <?php foreach ($errors as $e): ?><li><?= e($e) ?></li><?php endforeach; ?>
+            </ul>
+          </div>
+        <?php endif; ?>
+
+        <form method="post" novalidate>
+          <?= csrf_field() ?>
+
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" value="<?= e($old['full_name']) ?>" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="<?= e($old['email']) ?>" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Phone (optional)</label>
+            <input type="text" name="phone" class="form-control" value="<?= e($old['phone']) ?>">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+            <div class="form-text">Minimum 6 characters</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" required>
+          </div>
+
+          <button class="btn btn-success w-100">Create Account</button>
+
+          <div class="mt-3 text-center">
+            Already have an account?
+            <a href="<?= BASE_URL ?>/public/login.php">Login</a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<?php require_once __DIR__ . '/../app/includes/footer.php'; ?>
