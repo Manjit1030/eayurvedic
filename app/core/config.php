@@ -31,3 +31,11 @@ define('ALGO_CART_TOTALS', true);
 define('ALGO_SEVERITY_SCORE', true);
 define('ALGO_SYMPTOM_MATCH', true);
 define('ALGO_PRODUCT_RECOMMEND', true);
+
+// ==============================
+// KHALTI PAYMENT KEYS (TEST)
+// ==============================
+define('KHALTI_PUBLIC_KEY', '31ed4461eb0d4ba8af6a8f078a999b7d');
+define('KHALTI_SECRET_KEY', '819a4bb66d804f8c86c7f2f38ac32713');
+define('KHALTI_INITIATE_URL', 'https://dev.khalti.com/api/v2/epayment/initiate/');
+define('KHALTI_LOOKUP_URL', 'https://dev.khalti.com/api/v2/epayment/lookup/');

@@ -63,12 +63,15 @@ try {
     /* Create order code */
     $order_code = 'ORD' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
 
+    /* Handle Payment Method */
+    $payment_method = ($_POST['payment_method'] ?? 'cash') === 'khalti' ? 'khalti' : 'cash';
+
     /* Insert order */
     $ins = db()->prepare("
       INSERT INTO orders
       (order_code, user_id, address_id, subtotal, discount_amount, shipping_amount, tax_amount, total_amount,
-       payment_status, order_status, notes)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?)
+       payment_method, payment_status, order_status, notes)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
     ");
     $ins->execute([
         $order_code,
@@ -79,6 +82,7 @@ try {
         $totals['shipping'],
         $totals['tax'],
         $totals['total'],
+        $payment_method,
         'unpaid',
         'pending',
         $notes ?: null
@@ -114,6 +118,11 @@ try {
     $del->execute([$cart_id]);
 
     db()->commit();
+
+    /* If Khalti, initiate payment */
+    if ($payment_method === 'khalti') {
+        redirect('/public/khalti_init.php?order_id=' . $order_id);
+    }
 
     redirect('/public/order_success.php?code=' . urlencode($order_code));
 } catch (Exception $e) {

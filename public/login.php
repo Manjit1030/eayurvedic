@@ -118,7 +118,8 @@ if (is_post()) {
             <label class="form-label">Password</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-key"></i></span>
-              <input type="password" name="password" class="form-control" required>
+              <input type="password" name="password" id="loginPassword" class="form-control" required>
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('loginPassword', this)"><i class="bi bi-eye"></i></button>
             </div>
           </div>
 

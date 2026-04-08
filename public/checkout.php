@@ -111,6 +111,29 @@ $totals = algo_cart_totals($subtotal);
               <textarea name="notes" class="form-control" rows="3" placeholder="Any special delivery notes..."></textarea>
             </div>
 
+            <hr class="my-4">
+
+            <div class="mb-4">
+              <h2 class="h6 fw-bold mb-3"><i class="bi bi-credit-card me-2"></i>Payment Method</h2>
+              <div class="form-check border rounded p-3 mb-2">
+                <input class="form-check-input" type="radio" name="payment_method" value="cash" id="payCash" checked required>
+                <label class="form-check-label w-100" for="payCash">
+                  <div class="fw-semibold">Cash on Delivery</div>
+                  <div class="text-muted small">Pay when you receive your ayurvedic products.</div>
+                </label>
+              </div>
+              <div class="form-check border rounded p-3 mb-2">
+                <input class="form-check-input" type="radio" name="payment_method" value="khalti" id="payKhalti" required>
+                <label class="form-check-label d-flex justify-content-between align-items-center w-100" for="payKhalti">
+                  <div>
+                    <div class="fw-semibold">Khalti Payment</div>
+                    <div class="text-muted small">Pay securely using Khalti Wallet.</div>
+                  </div>
+                  <img src="https://khalti.com/static/img/logo1.png" alt="Khalti" style="height: 24px;">
+                </label>
+              </div>
+            </div>
+
             <div class="mt-4 d-grid">
               <button class="btn btn-success btn-lg">
                 <i class="bi bi-bag-check me-2"></i> Place Order

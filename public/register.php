@@ -80,13 +80,16 @@ if (is_post()) {
 
           <div class="mb-3">
             <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" required>
+            <div class="input-group">
+              <input type="password" name="password" id="regPassword" class="form-control" required>
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePwd(['regPassword', 'regConfirmPassword'], this)"><i class="bi bi-eye"></i></button>
+            </div>
             <div class="form-text">Minimum 6 characters</div>
           </div>
 
           <div class="mb-3">
             <label class="form-label">Confirm Password</label>
-            <input type="password" name="confirm_password" class="form-control" required>
+            <input type="password" name="confirm_password" id="regConfirmPassword" class="form-control" required>
           </div>
 
           <button class="btn btn-success w-100">Create Account</button>
