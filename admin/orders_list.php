@@ -9,27 +9,28 @@ require_role('admin');
 csrf_init();
 
 $orderStatusOptions = [
-  'pending' => 'Pending',
-  'shipping' => 'Shipping',
+  'pending'   => 'Pending',
+  'shipped'   => 'Shipped',
   'delivered' => 'Delivered',
 ];
 
 $paymentStatusOptions = [
   'unpaid' => 'Unpaid',
-  'paid' => 'Paid',
+  'paid'   => 'Paid',
 ];
 
 function normalize_admin_order_status($status) {
   $status = strtolower(trim((string)$status));
-  if ($status === 'shipped') {
-    return 'shipping';
+  // Handle legacy 'shipping' if it's still floating around in the DB
+  if ($status === 'shipping') {
+    return 'shipped';
   }
-  return in_array($status, ['pending', 'shipping', 'delivered'], true) ? $status : 'pending';
+  return in_array($status, ['pending', 'shipped', 'delivered'], true) ? $status : 'pending';
 }
 
 function normalize_admin_payment_status($status) {
   $status = strtolower(trim((string)$status));
-  return in_array($status, ['paid', 'unpaid'], true) ? $status : 'unpaid';
+  return in_array($status, ['paid', 'pending', 'unpaid'], true) ? $status : 'unpaid';
 }
 
 function normalize_admin_payment_method($method) {
@@ -47,37 +48,31 @@ if (is_post()) {
   csrf_verify();
 
   $orderId = (int)($_POST['order_id'] ?? 0);
-  $orderStatus = normalize_admin_order_status($_POST['order_status'] ?? 'pending');
+  $newOrderStatus = normalize_admin_order_status($_POST['order_status'] ?? 'pending');
+  $newPaymentStatus = normalize_admin_payment_status($_POST['payment_status'] ?? 'unpaid');
 
-  if ($orderId > 0 && isset($orderStatusOptions[$orderStatus])) {
-    $stmt = db()->prepare("SELECT payment_method, payment_status FROM orders WHERE id=? LIMIT 1");
+  if ($orderId > 0) {
+    $stmt = db()->prepare("SELECT order_status, payment_status FROM orders WHERE id=? LIMIT 1");
     $stmt->execute([$orderId]);
-    $order = $stmt->fetch();
+    $currentOrder = $stmt->fetch();
 
-    if ($order) {
-      $paymentMethod = normalize_admin_payment_method($order['payment_method'] ?? '');
+    if ($currentOrder) {
+      $currentOrderStatus = normalize_admin_order_status($currentOrder['order_status']);
+      $currentPaymentStatus = normalize_admin_payment_status($currentOrder['payment_status']);
 
-      if ($paymentMethod === 'cash') {
-        $paymentStatus = normalize_admin_payment_status($_POST['payment_status'] ?? ($order['payment_status'] ?? 'unpaid'));
+      // Final status locking:
+      // 1. If current order status is 'delivered', it cannot be changed.
+      // 2. If current payment status is 'paid', it cannot be changed.
+      $finalOrderStatus = $currentOrderStatus === 'delivered' ? 'delivered' : $newOrderStatus;
+      $finalPaymentStatus = $currentPaymentStatus === 'paid' ? 'paid' : $newPaymentStatus;
 
-        if (isset($paymentStatusOptions[$paymentStatus])) {
-          $stmt = db()->prepare("
-            UPDATE orders
-            SET order_status = ?, payment_status = ?
-            WHERE id = ?
-          ");
-          $stmt->execute([$orderStatus, $paymentStatus, $orderId]);
-          $_SESSION['order_success_message'] = 'Order updated successfully.';
-        }
-      } else {
-        $stmt = db()->prepare("
-          UPDATE orders
-          SET order_status = ?
-          WHERE id = ?
-        ");
-        $stmt->execute([$orderStatus, $orderId]);
-        $_SESSION['order_success_message'] = 'Order updated successfully.';
-      }
+      $stmt = db()->prepare("
+        UPDATE orders
+        SET order_status = ?, payment_status = ?
+        WHERE id = ?
+      ");
+      $stmt->execute([$finalOrderStatus, $finalPaymentStatus, $orderId]);
+      $_SESSION['order_success_message'] = 'Order updated successfully.';
     }
   }
 
@@ -119,7 +114,7 @@ function admin_order_badge_pay($st) {
 function admin_order_badge_status($st) {
   $st = normalize_admin_order_status($st);
   if ($st === 'delivered') return '<span class="badge text-bg-success">Delivered</span>';
-  if ($st === 'shipping') return '<span class="badge text-bg-info">Shipping</span>';
+  if ($st === 'shipped')   return '<span class="badge text-bg-info">Shipped</span>';
   return '<span class="badge text-bg-warning">Pending</span>';
 }
 ?>
@@ -135,6 +130,14 @@ function admin_order_badge_status($st) {
 <?php if ($successMessage): ?>
   <div class="alert alert-success"><?= e($successMessage) ?></div>
 <?php endif; ?>
+
+<!-- Single shared form placed OUTSIDE the table to avoid invalid HTML -->
+<form method="post" id="order-shared-form" style="display:none;">
+  <?= csrf_field() ?>
+  <input type="hidden" name="order_id"       id="shared-order-id"       value="">
+  <input type="hidden" name="order_status"   id="shared-order-status"   value="">
+  <input type="hidden" name="payment_status" id="shared-payment-status" value="">
+</form>
 
 <?php if (!$orders): ?>
   <div class="ea-empty-state">
@@ -164,11 +167,8 @@ function admin_order_badge_status($st) {
             <?php
               $normalizedPaymentMethod = normalize_admin_payment_method($order['payment_method'] ?? '');
               $isCashOrder = $normalizedPaymentMethod === 'cash';
-              $currentOrderStatus = normalize_admin_order_status($order['order_status'] ?? 'pending');
+              $currentOrderStatus   = normalize_admin_order_status($order['order_status'] ?? 'pending');
               $currentPaymentStatus = normalize_admin_payment_status($order['payment_status'] ?? ($isCashOrder ? 'unpaid' : 'paid'));
-              $formId = 'order-update-' . (int)$order['id'];
-              $orderStatusInputId = 'order-status-input-' . (int)$order['id'];
-              $paymentStatusInputId = 'payment-status-input-' . (int)$order['id'];
             ?>
             <tr>
               <td>
@@ -182,7 +182,8 @@ function admin_order_badge_status($st) {
                 <select
                   class="form-select form-select-sm"
                   aria-label="Order status"
-                  onchange="document.getElementById('<?= e($orderStatusInputId) ?>').value = this.value"
+                  onchange="submitOrderUpdate(<?= (int)$order['id'] ?>, this.value, '<?= e($currentPaymentStatus) ?>')"
+                  <?= $currentOrderStatus === 'delivered' ? 'disabled' : '' ?>
                 >
                   <?php foreach ($orderStatusOptions as $value => $label): ?>
                     <option value="<?= e($value) ?>" <?= $currentOrderStatus === $value ? 'selected' : '' ?>>
@@ -192,34 +193,25 @@ function admin_order_badge_status($st) {
                 </select>
               </td>
               <td>
-                <?php if ($isCashOrder): ?>
-                  <select
-                    class="form-select form-select-sm"
-                    aria-label="Payment status"
-                    onchange="document.getElementById('<?= e($paymentStatusInputId) ?>').value = this.value"
-                  >
-                    <?php foreach ($paymentStatusOptions as $value => $label): ?>
-                      <option value="<?= e($value) ?>" <?= $currentPaymentStatus === $value ? 'selected' : '' ?>>
-                        <?= e($label) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                <?php else: ?>
-                  <?= admin_order_badge_pay($currentPaymentStatus) ?>
-                <?php endif; ?>
+                <select
+                  class="form-select form-select-sm"
+                  aria-label="Payment status"
+                  onchange="submitOrderUpdate(<?= (int)$order['id'] ?>, '<?= e($currentOrderStatus) ?>', this.value)"
+                  <?= $currentPaymentStatus === 'paid' ? 'disabled' : '' ?>
+                >
+                  <?php foreach ($paymentStatusOptions as $value => $label): ?>
+                    <?php
+                      $isSelected = ($currentPaymentStatus === $value) || ($currentPaymentStatus === 'pending' && $value === 'unpaid');
+                    ?>
+                    <option value="<?= e($value) ?>" <?= $isSelected ? 'selected' : '' ?>>
+                      <?= e($label) ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
               </td>
               <td><?= e(strtoupper((string)$order['payment_method'])) ?></td>
               <td class="ea-meta"><?= e(date('M j, Y, g:i a', strtotime((string)$order['created_at']))) ?></td>
               <td>
-                <form method="post" id="<?= e($formId) ?>" class="d-inline-block me-2 mb-1">
-                  <?= csrf_field() ?>
-                  <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
-                  <input type="hidden" name="order_status" id="<?= e($orderStatusInputId) ?>" value="<?= e($currentOrderStatus) ?>">
-                  <?php if ($isCashOrder): ?>
-                    <input type="hidden" name="payment_status" id="<?= e($paymentStatusInputId) ?>" value="<?= e($currentPaymentStatus) ?>">
-                  <?php endif; ?>
-                  <button class="btn btn-sm btn-outline-success">Update</button>
-                </form>
                 <a class="btn btn-sm btn-outline-success" href="<?= BASE_URL ?>/public/order_success.php?code=<?= urlencode((string)$order['order_code']) ?>">
                   <i class="bi bi-eye me-1"></i>View
                 </a>
@@ -231,5 +223,14 @@ function admin_order_badge_status($st) {
     </div>
   </div>
 <?php endif; ?>
+
+<script>
+function submitOrderUpdate(orderId, orderStatus, paymentStatus) {
+  document.getElementById('shared-order-id').value       = orderId;
+  document.getElementById('shared-order-status').value   = orderStatus;
+  document.getElementById('shared-payment-status').value = paymentStatus;
+  document.getElementById('order-shared-form').submit();
+}
+</script>
 
 <?php require_once __DIR__ . '/../app/includes/footer.php'; ?>

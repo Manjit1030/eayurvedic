@@ -10,6 +10,8 @@ csrf_init();
 $errors = [];
 $email = '';
 $login_as = 'user'; // default
+$registered = isset($_GET['registered']) && $_GET['registered'] === '1';
+$accountDeleted = isset($_GET['account_deleted']) && $_GET['account_deleted'] === '1';
 
 if (is_post()) {
     csrf_verify();
@@ -79,6 +81,14 @@ require_once __DIR__ . '/../app/includes/header.php';
       <h1 class="mb-2" style="font-size:clamp(2.3rem,4vw,3.2rem);">Welcome Back</h1>
       <p class="ea-subtle mb-0">Login to continue your Ayurvedic wellness journey.</p>
     </div>
+
+    <?php if ($registered): ?>
+      <div class="alert alert-success">Your account has been created. Please log in.</div>
+    <?php endif; ?>
+
+    <?php if ($accountDeleted): ?>
+      <div class="alert alert-warning">Your account has been removed and you can no longer log in with it.</div>
+    <?php endif; ?>
 
     <?php if ($errors): ?>
       <div class="alert alert-danger">

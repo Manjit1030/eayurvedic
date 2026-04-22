@@ -7,7 +7,7 @@ auth_init();
 $u = current_user();
 $currentRole = $u['role'] ?? '';
 $userHasOrdersPage = file_exists(__DIR__ . '/../../user/orders.php');
-$userHasProfilePage = file_exists(__DIR__ . '/../../user/profile.php');
+$userHasAccountPage = file_exists(__DIR__ . '/../../user/account.php');
 $adminHasOrdersPage = file_exists(__DIR__ . '/../../admin/orders_list.php');
 $adminHasPaymentsPage = file_exists(__DIR__ . '/../../admin/payments_list.php');
 $adminHasUsersPage = file_exists(__DIR__ . '/../../admin/users_list.php');
@@ -813,13 +813,6 @@ if ($currentRole === 'user') {
               </a>
             </li>
           <?php endif; ?>
-          <?php if ($userHasProfilePage): ?>
-            <li class="nav-item">
-              <a class="nav-link" href="<?= BASE_URL ?>/user/profile.php">
-                <i class="bi bi-person me-1"></i>Profile
-              </a>
-            </li>
-          <?php endif; ?>
           <li class="nav-item">
             <a class="nav-link" href="<?= BASE_URL ?>/public/shop.php">
               <i class="bi bi-bag-heart me-1"></i>Shop
@@ -924,6 +917,13 @@ if ($currentRole === 'user') {
                   <li>
                     <a class="dropdown-item" href="<?= BASE_URL ?>/user/orders.php">
                       <i class="bi bi-receipt me-2"></i>My Orders
+                    </a>
+                  </li>
+                <?php endif; ?>
+                <?php if ($userHasAccountPage): ?>
+                  <li>
+                    <a class="dropdown-item" href="<?= BASE_URL ?>/user/account.php">
+                      <i class="bi bi-person me-2"></i>My Account
                     </a>
                   </li>
                 <?php endif; ?>
