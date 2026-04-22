@@ -160,7 +160,9 @@ function algo_symptom_solution_match(string $symptoms, string $mental_condition 
 {
     global $algorithm_3;
 
-    if (!ALGO_ENABLED || !ALGO_SYMPTOM_MATCH || !$algorithm_3) {
+    $symptomMatchEnabled = defined('ALGO_SYMPTOM_MATCH') ? ALGO_SYMPTOM_MATCH : true;
+
+    if (!ALGO_ENABLED || !$symptomMatchEnabled || !$algorithm_3) {
         return [
             'mode' => 'WITHOUT_ALGORITHM',
             'top_categories' => [],
@@ -284,4 +286,3 @@ function algo_symptom_solution_match(string $symptoms, string $mental_condition 
         'suggested_tags' => $tags
     ];
 }
-

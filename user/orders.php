@@ -12,7 +12,7 @@ $u = current_user();
 $orders = [];
 try {
   $stmt = db()->prepare("
-    SELECT id, order_code, total_amount, payment_status, order_status, created_at
+    SELECT id, order_code, total_amount, payment_method, payment_status, order_status, created_at
     FROM orders
     WHERE user_id=?
     ORDER BY id DESC
@@ -22,21 +22,25 @@ try {
 } catch (Exception $e) {}
 
 function user_order_badge_pay($st) {
-  $st = strtolower((string)$st);
+  $st = strtolower(trim((string)$st));
+  if (!in_array($st, ['paid', 'unpaid'], true)) {
+    $st = 'unpaid';
+  }
   if ($st === 'paid') return '<span class="badge text-bg-success">Paid</span>';
-  if ($st === 'pending') return '<span class="badge text-bg-warning">Pending</span>';
-  if ($st === 'failed') return '<span class="badge text-bg-danger">Failed</span>';
-  if ($st === 'refunded') return '<span class="badge text-bg-info">Refunded</span>';
   return '<span class="badge text-bg-secondary">Unpaid</span>';
 }
 
 function user_order_badge_status($st) {
-  $st = strtolower((string)$st);
+  $st = strtolower(trim((string)$st));
+  if ($st === 'shipped') {
+    $st = 'shipping';
+  }
+  if (!in_array($st, ['pending', 'shipping', 'delivered'], true)) {
+    $st = 'pending';
+  }
   if ($st === 'delivered') return '<span class="badge text-bg-success">Delivered</span>';
-  if ($st === 'shipped') return '<span class="badge text-bg-primary">Shipped</span>';
-  if ($st === 'confirmed') return '<span class="badge text-bg-info">Confirmed</span>';
-  if ($st === 'cancelled') return '<span class="badge text-bg-danger">Cancelled</span>';
-  return '<span class="badge text-bg-secondary">Pending</span>';
+  if ($st === 'shipping') return '<span class="badge text-bg-info">Shipping</span>';
+  return '<span class="badge text-bg-warning">Pending</span>';
 }
 ?>
 
@@ -72,19 +76,25 @@ function user_order_badge_status($st) {
         </div>
 
         <div class="row g-3 align-items-center">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="ea-note-card h-100">
               <div class="fw-semibold mb-2">Payment Status</div>
               <div><?= user_order_badge_pay($order['payment_status'] ?? 'unpaid') ?></div>
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
+            <div class="ea-note-card h-100">
+              <div class="fw-semibold mb-2">Payment Method</div>
+              <div class="ea-meta"><?= e(strtoupper((string)($order['payment_method'] ?? '-'))) ?></div>
+            </div>
+          </div>
+          <div class="col-md-3">
             <div class="ea-note-card h-100">
               <div class="fw-semibold mb-2">Order Status</div>
               <div><?= user_order_badge_status($order['order_status'] ?? 'pending') ?></div>
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="ea-note-card h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="fw-semibold mb-2">Order Code</div>

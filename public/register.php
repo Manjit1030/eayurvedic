@@ -7,6 +7,7 @@ csrf_init();
 
 $errors = [];
 $old = ['full_name'=>'', 'email'=>'', 'phone'=>''];
+$nepalPhonePattern = '^98[0-9]{8}$';
 
 if (is_post()) {
     csrf_verify();
@@ -19,25 +20,59 @@ if (is_post()) {
 
     $old = ['full_name'=>$full_name, 'email'=>$email, 'phone'=>$phone];
 
-    if ($full_name === '') $errors[] = "Full name is required.";
-    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Valid email is required.";
-    if ($password === '' || strlen($password) < 6) $errors[] = "Password must be at least 6 characters.";
-    if ($password !== $confirm) $errors[] = "Passwords do not match.";
+    if ($full_name === '') {
+        $errors[] = "Full name is required.";
+    } elseif (mb_strlen($full_name) < 2) {
+        $errors[] = "Full name must be at least 2 characters.";
+    }
+
+    if ($email === '') {
+        $errors[] = "Email is required.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Enter a valid email address.";
+    }
+
+    if ($phone === '') {
+        $errors[] = "Phone number is required.";
+    } elseif (!is_valid_nepal_phone($phone)) {
+        $errors[] = "Enter a valid Nepal phone number starting with 98.";
+    }
+
+    if (trim($password) === '' || strlen($password) < 6) {
+        $errors[] = "Password must be at least 6 characters.";
+    }
+
+    if (trim($confirm) === '') {
+        $errors[] = "Confirm password is required.";
+    } elseif ($password !== $confirm) {
+        $errors[] = "Confirm password does not match.";
+    }
 
     if (!$errors) {
-        $stmt = db()->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt = db()->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
         $stmt->execute([$email]);
+        $emailExists = $stmt->fetchColumn();
 
-        if ($stmt->fetch()) {
-            $errors[] = "Email already registered. Please login.";
-        } else {
+        $stmt = db()->prepare("SELECT id FROM users WHERE phone = ? LIMIT 1");
+        $stmt->execute([$phone]);
+        $phoneExists = $stmt->fetchColumn();
+
+        if ($emailExists) {
+            $errors[] = "Email is already registered.";
+        }
+
+        if ($phoneExists) {
+            $errors[] = "Phone number is already registered.";
+        }
+
+        if (!$errors) {
             $hash = password_hash($password, PASSWORD_DEFAULT);
 
             $stmt = db()->prepare("
                 INSERT INTO users (full_name, email, phone, password_hash, role, status)
                 VALUES (?, ?, ?, ?, 'user', 'active')
             ");
-            $stmt->execute([$full_name, $email, $phone ?: null, $hash]);
+            $stmt->execute([$full_name, $email, $phone, $hash]);
 
             redirect('/public/login.php?registered=1');
         }
@@ -63,12 +98,12 @@ require_once __DIR__ . '/../app/includes/header.php';
       </div>
     <?php endif; ?>
 
-    <form method="post" novalidate>
+    <form method="post">
       <?= csrf_field() ?>
 
       <div class="mb-3">
         <label class="form-label fw-semibold">Full Name</label>
-        <input type="text" name="full_name" class="form-control" value="<?= e($old['full_name']) ?>" required>
+        <input type="text" name="full_name" class="form-control" value="<?= e($old['full_name']) ?>" minlength="2" required>
       </div>
 
       <div class="mb-3">
@@ -77,14 +112,14 @@ require_once __DIR__ . '/../app/includes/header.php';
       </div>
 
       <div class="mb-3">
-        <label class="form-label fw-semibold">Phone (optional)</label>
-        <input type="text" name="phone" class="form-control" value="<?= e($old['phone']) ?>">
+        <label class="form-label fw-semibold">Phone Number</label>
+        <input type="text" name="phone" class="form-control" value="<?= e($old['phone']) ?>" pattern="<?= e($nepalPhonePattern) ?>" inputmode="numeric" maxlength="10" placeholder="98XXXXXXXX" required>
       </div>
 
       <div class="mb-3">
         <label class="form-label fw-semibold">Password</label>
         <div class="input-group">
-          <input type="password" name="password" id="regPassword" class="form-control" required>
+          <input type="password" name="password" id="regPassword" class="form-control" minlength="6" required>
           <button class="btn btn-outline-secondary" type="button" onclick="togglePwd(['regPassword', 'regConfirmPassword'], this)"><i class="bi bi-eye"></i></button>
         </div>
         <div class="form-text">Minimum 6 characters</div>

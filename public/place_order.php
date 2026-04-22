@@ -65,7 +65,7 @@ try {
 
     /* Handle Payment Method */
     $payment_method = ($_POST['payment_method'] ?? 'cash') === 'khalti' ? 'khalti' : 'cash';
-    $payment_status = $payment_method === 'khalti' ? 'pending' : 'unpaid';
+    $payment_status = $payment_method === 'khalti' ? 'paid' : 'unpaid';
 
     /* Insert order */
     $ins = db()->prepare("

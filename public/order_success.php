@@ -2,8 +2,11 @@
 require_once __DIR__ . '/../app/core/db.php';
 require_once __DIR__ . '/../app/core/auth.php';
 require_once __DIR__ . '/../app/core/functions.php';
-require_once __DIR__ . '/../app/includes/header.php';
 
+require_login();
+
+$viewer = current_user();
+require_once __DIR__ . '/../app/includes/header.php';
 $code = $_GET['code'] ?? '';
 
 if (!$code) {
@@ -23,7 +26,7 @@ $stmt = db()->prepare("
 $stmt->execute([$code]);
 $order = $stmt->fetch();
 
-if (!$order) {
+if (!$order || (($viewer['role'] ?? '') !== 'admin' && (int)$order['user_id'] !== (int)$viewer['id'])) {
     echo '<div class="alert alert-danger">Order not found.</div>';
     require_once __DIR__ . '/../app/includes/footer.php';
     exit;
@@ -33,6 +36,22 @@ if (!$order) {
 $stmt = db()->prepare("SELECT * FROM order_items WHERE order_id=?");
 $stmt->execute([$order['id']]);
 $items = $stmt->fetchAll();
+
+function order_success_badge_pay($st) {
+    $st = strtolower((string)$st);
+    if ($st === 'paid') return '<span class="badge bg-success">PAID</span>';
+    if ($st === 'failed') return '<span class="badge bg-danger">FAILED</span>';
+    if ($st === 'refunded') return '<span class="badge bg-info">REFUNDED</span>';
+    if ($st === 'pending') return '<span class="badge bg-warning">PENDING</span>';
+    return '<span class="badge bg-secondary">UNPAID</span>';
+}
+
+function order_success_badge_status($st) {
+    $st = strtolower((string)$st);
+    if ($st === 'delivered') return '<span class="badge bg-success">DELIVERED</span>';
+    if ($st === 'shipping' || $st === 'shipped') return '<span class="badge bg-info">SHIPPING</span>';
+    return '<span class="badge bg-warning">PENDING</span>';
+}
 ?>
 
 <div class="row justify-content-center">
@@ -53,9 +72,11 @@ $items = $stmt->fetchAll();
                         <h2 class="h6 fw-bold border-bottom pb-2 mb-3">Order Information</h2>
                         <div class="mb-2">
                             <span class="text-muted small d-block">Payment Status</span>
-                            <span class="badge bg-<?= $order['payment_status'] === 'paid' ? 'success' : 'warning' ?>">
-                                <?= strtoupper(e($order['payment_status'])) ?>
-                            </span>
+                            <?= order_success_badge_pay($order['payment_status'] ?? 'unpaid') ?>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted small d-block">Order Status</span>
+                            <?= order_success_badge_status($order['order_status'] ?? 'pending') ?>
                         </div>
                         <div class="mb-2">
                             <span class="text-muted small d-block">Payment Method</span>

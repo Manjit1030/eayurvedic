@@ -110,10 +110,8 @@ function badge_pay($st) {
 function badge_order($st) {
   $st = strtolower((string)$st);
   if ($st === 'delivered') return '<span class="badge text-bg-success">Delivered</span>';
-  if ($st === 'shipped') return '<span class="badge text-bg-primary">Shipped</span>';
-  if ($st === 'cancelled') return '<span class="badge text-bg-danger">Cancelled</span>';
-  if ($st === 'confirmed') return '<span class="badge text-bg-info">Confirmed</span>';
-  return '<span class="badge text-bg-secondary">Pending</span>';
+  if ($st === 'shipping' || $st === 'shipped') return '<span class="badge text-bg-info">Shipping</span>';
+  return '<span class="badge text-bg-warning">Pending</span>';
 }
 ?>
 

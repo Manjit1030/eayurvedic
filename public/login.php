@@ -18,9 +18,17 @@ if (is_post()) {
     $password = (string)($_POST['password'] ?? '');
     $login_as = ($_POST['login_as'] ?? 'user') === 'admin' ? 'admin' : 'user';
 
-    if ($email === '' || $password === '') {
-        $errors[] = "Email and password are required.";
-    } else {
+    if ($email === '') {
+        $errors[] = "Email is required.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Enter a valid email address.";
+    }
+
+    if (trim($password) === '') {
+        $errors[] = "Password is required.";
+    }
+
+    if (!$errors) {
         $stmt = db()->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
@@ -28,7 +36,7 @@ if (is_post()) {
         if (!$user) {
             $errors[] = "Invalid email or password.";
         } elseif (($user['status'] ?? 'active') !== 'active') {
-            $errors[] = "Your account is blocked/inactive.";
+            $errors[] = "Your account is blocked or removed.";
         } elseif (!password_verify($password, $user['password_hash'])) {
             $errors[] = "Invalid email or password.";
         } else {

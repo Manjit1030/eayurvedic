@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(30) NULL,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('user','admin') NOT NULL DEFAULT 'user',
-  status ENUM('active','blocked') NOT NULL DEFAULT 'active',
+  status ENUM('active','blocked','removed') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   payment_method ENUM('cash', 'khalti') NOT NULL DEFAULT 'cash',
   payment_status ENUM('unpaid','pending','paid','failed','refunded') NOT NULL DEFAULT 'unpaid',
-  order_status ENUM('pending','confirmed','shipped','delivered','cancelled') NOT NULL DEFAULT 'pending',
+  order_status ENUM('pending','shipping','delivered') NOT NULL DEFAULT 'pending',
   notes TEXT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,

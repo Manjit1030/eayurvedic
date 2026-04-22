@@ -84,7 +84,7 @@ if (isset($res_data['status']) && $res_data['status'] === 'Completed') {
         $updP->execute([$response, $payment['id']]);
 
         // Keep the order history in sync for admin/user views
-        $updO = db()->prepare("UPDATE orders SET payment_status='failed' WHERE id=?");
+        $updO = db()->prepare("UPDATE orders SET payment_status='unpaid' WHERE id=?");
         $updO->execute([$order_id]);
 
         db()->commit();

@@ -18,7 +18,21 @@ $stmt->execute([$order_id, $user['id']]);
 $order = $stmt->fetch();
 
 if (!$order) die("Order not found.");
-if ($order['payment_status'] === 'paid') die("Order already paid.");
+if (($order['payment_method'] ?? '') !== 'khalti') die("Invalid payment method for Khalti payment.");
+
+$stmt = db()->prepare("
+    SELECT status
+    FROM payments
+    WHERE order_id=? AND gateway='khalti'
+    ORDER BY id DESC
+    LIMIT 1
+");
+$stmt->execute([$order_id]);
+$latestPayment = $stmt->fetch();
+
+if ($latestPayment && ($latestPayment['status'] ?? '') === 'success') {
+    die("Order already paid.");
+}
 
 /* Prepare Khalti Request */
 $amount_in_paisa = (int)($order['total_amount'] * 100); // Khalti expects paisa

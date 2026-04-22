@@ -25,6 +25,7 @@ define('DB_PASS', ''); // XAMPP default is empty
 
 // Master switch: if false -> ALL algorithms behave like "without algorithm"
 define('ALGO_ENABLED', true);
+define('ALGO_SYMPTOM_MATCH', true);
 
 
 // ==============================

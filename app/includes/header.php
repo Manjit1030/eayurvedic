@@ -10,6 +10,7 @@ $userHasOrdersPage = file_exists(__DIR__ . '/../../user/orders.php');
 $userHasProfilePage = file_exists(__DIR__ . '/../../user/profile.php');
 $adminHasOrdersPage = file_exists(__DIR__ . '/../../admin/orders_list.php');
 $adminHasPaymentsPage = file_exists(__DIR__ . '/../../admin/payments_list.php');
+$adminHasUsersPage = file_exists(__DIR__ . '/../../admin/users_list.php');
 $brandHref = BASE_URL . '/public/index.php';
 $brandLabel = 'eAyurvedic';
 
@@ -864,6 +865,13 @@ if ($currentRole === 'user') {
               </a>
             </li>
           <?php endif; ?>
+          <?php if ($adminHasUsersPage): ?>
+            <li class="nav-item">
+              <a class="nav-link" href="<?= BASE_URL ?>/admin/users_list.php">
+                <i class="bi bi-people me-1"></i>Users
+              </a>
+            </li>
+          <?php endif; ?>
         <?php endif; ?>
       </ul>
 
@@ -957,6 +965,13 @@ if ($currentRole === 'user') {
                   <li>
                     <a class="dropdown-item" href="<?= BASE_URL ?>/admin/payments_list.php">
                       <i class="bi bi-credit-card me-2"></i>Payments
+                    </a>
+                  </li>
+                <?php endif; ?>
+                <?php if ($adminHasUsersPage): ?>
+                  <li>
+                    <a class="dropdown-item" href="<?= BASE_URL ?>/admin/users_list.php">
+                      <i class="bi bi-people me-2"></i>Users
                     </a>
                   </li>
                 <?php endif; ?>
