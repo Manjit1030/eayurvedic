@@ -16,59 +16,64 @@ $stmt->execute([$user['id']]);
 $addresses = $stmt->fetchAll();
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h2 class="h5 fw-bold mb-0">My Addresses</h2>
-  <a class="btn btn-success btn-sm" href="<?= BASE_URL ?>/user/add_address.php">+ Add Address</a>
-</div>
+<section class="ea-page-head">
+  <div>
+    <div class="ea-page-kicker">User Panel</div>
+    <h1 class="ea-page-title">My Addresses</h1>
+    <p class="ea-page-subtitle">Manage delivery addresses used during checkout and order placement.</p>
+  </div>
+  <div class="ea-page-actions">
+    <a class="btn btn-success" href="<?= BASE_URL ?>/user/add_address.php"><i class="bi bi-plus-circle me-1"></i>Add Address</a>
+  </div>
+</section>
 
 <?php if (!$addresses): ?>
-  <div class="alert alert-info">No addresses found. Add one first.</div>
+  <div class="ea-empty-state">
+    <span class="ea-icon-pill"><i class="bi bi-geo-alt"></i></span>
+    <h3>No addresses found</h3>
+    <p>Add a delivery address so your checkout process is ready when you place an order.</p>
+  </div>
 <?php else: ?>
-  <div class="table-responsive">
-    <table class="table table-bordered align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Label</th>
-          <th>Province</th>
-          <th>District</th>
-          <th>City</th>
-          <th>Area</th>
-          <th>Street</th>
-          <th>Postal</th>
-          <th style="width: 180px;">Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <?php foreach ($addresses as $a): ?>
+  <div class="ea-table-wrap">
+    <div class="table-responsive shadow-none">
+      <table class="table ea-table align-middle mb-0">
+        <thead>
           <tr>
-            <td><?= e($a['label'] ?? '') ?></td>
-            <td><?= e($a['province'] ?? '') ?></td>
-            <td><?= e($a['district'] ?? '') ?></td>
-            <td><?= e($a['city'] ?? '') ?></td>
-            <td><?= e($a['area'] ?? '') ?></td>
-            <td><?= e($a['street'] ?? '') ?></td>
-            <td><?= e($a['postal_code'] ?? '') ?></td>
-            <td>
-              <a class="btn btn-sm btn-outline-primary"
-                 href="<?= BASE_URL ?>/user/edit_address.php?id=<?= (int)$a['id'] ?>">
-                Edit
-              </a>
-
-              <form method="post"
-                    action="<?= BASE_URL ?>/user/delete_address.php"
-                    class="d-inline"
-                    onsubmit="return confirm('Delete this address?');">
-                <?= csrf_field() ?>
-                <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                <button class="btn btn-sm btn-outline-danger">Delete</button>
-              </form>
-            </td>
+            <th>Label</th>
+            <th>Province</th>
+            <th>District</th>
+            <th>City</th>
+            <th>Area</th>
+            <th>Street</th>
+            <th>Postal</th>
+            <th style="width: 190px;">Actions</th>
           </tr>
-        <?php endforeach; ?>
-      </tbody>
-
-    </table>
+        </thead>
+        <tbody>
+          <?php foreach ($addresses as $a): ?>
+            <tr>
+              <td class="fw-semibold"><?= e($a['label'] ?? '') ?></td>
+              <td><?= e($a['province'] ?? '') ?></td>
+              <td><?= e($a['district'] ?? '') ?></td>
+              <td><?= e($a['city'] ?? '') ?></td>
+              <td><?= e($a['area'] ?? '') ?></td>
+              <td><?= e($a['street'] ?? '') ?></td>
+              <td><?= e($a['postal_code'] ?? '') ?></td>
+              <td>
+                <div class="ea-actions">
+                  <a class="btn btn-sm btn-outline-success" href="<?= BASE_URL ?>/user/edit_address.php?id=<?= (int)$a['id'] ?>">Edit</a>
+                  <form method="post" action="<?= BASE_URL ?>/user/delete_address.php" onsubmit="return confirm('Delete this address?');">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
   </div>
 <?php endif; ?>
 

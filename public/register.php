@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../app/core/db.php';
 require_once __DIR__ . '/../app/core/functions.php';
 require_once __DIR__ . '/../app/core/csrf.php';
-require_once __DIR__ . '/../app/includes/header.php';
 
 csrf_init();
 
@@ -44,65 +43,66 @@ if (is_post()) {
         }
     }
 }
+
+require_once __DIR__ . '/../app/includes/header.php';
 ?>
 
-<div class="row justify-content-center">
-  <div class="col-12 col-md-8 col-lg-5">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h1 class="h4 fw-bold mb-3">User Registration</h1>
-
-        <?php if ($errors): ?>
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              <?php foreach ($errors as $e): ?><li><?= e($e) ?></li><?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-
-        <form method="post" novalidate>
-          <?= csrf_field() ?>
-
-          <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="full_name" class="form-control" value="<?= e($old['full_name']) ?>" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" value="<?= e($old['email']) ?>" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Phone (optional)</label>
-            <input type="text" name="phone" class="form-control" value="<?= e($old['phone']) ?>">
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Password</label>
-            <div class="input-group">
-              <input type="password" name="password" id="regPassword" class="form-control" required>
-              <button class="btn btn-outline-secondary" type="button" onclick="togglePwd(['regPassword', 'regConfirmPassword'], this)"><i class="bi bi-eye"></i></button>
-            </div>
-            <div class="form-text">Minimum 6 characters</div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Confirm Password</label>
-            <input type="password" name="confirm_password" id="regConfirmPassword" class="form-control" required>
-          </div>
-
-          <button class="btn btn-success w-100">Create Account</button>
-
-          <div class="mt-3 text-center">
-            Already have an account?
-            <a href="<?= BASE_URL ?>/public/login.php">Login</a>
-          </div>
-        </form>
-
-      </div>
+<section class="ea-auth-shell">
+  <div class="ea-auth-card p-4 p-lg-5">
+    <div class="text-center mb-4">
+      <div class="ea-auth-logo mx-auto mb-3"><i class="bi bi-flower1"></i></div>
+      <h1 class="mb-2" style="font-size:clamp(2.3rem,4vw,3.2rem);">Create Account</h1>
+      <p class="ea-subtle mb-0">Join eAyurvedic to explore consultation and medicine ordering.</p>
     </div>
+
+    <?php if ($errors): ?>
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          <?php foreach ($errors as $e): ?><li><?= e($e) ?></li><?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endif; ?>
+
+    <form method="post" novalidate>
+      <?= csrf_field() ?>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Full Name</label>
+        <input type="text" name="full_name" class="form-control" value="<?= e($old['full_name']) ?>" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Email</label>
+        <input type="email" name="email" class="form-control" value="<?= e($old['email']) ?>" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Phone (optional)</label>
+        <input type="text" name="phone" class="form-control" value="<?= e($old['phone']) ?>">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Password</label>
+        <div class="input-group">
+          <input type="password" name="password" id="regPassword" class="form-control" required>
+          <button class="btn btn-outline-secondary" type="button" onclick="togglePwd(['regPassword', 'regConfirmPassword'], this)"><i class="bi bi-eye"></i></button>
+        </div>
+        <div class="form-text">Minimum 6 characters</div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Confirm Password</label>
+        <input type="password" name="confirm_password" id="regConfirmPassword" class="form-control" required>
+      </div>
+
+      <button class="btn btn-success ea-auth-submit w-100 btn-lg">Create Account</button>
+
+      <div class="mt-4 text-center">
+        <span class="ea-subtle">Already have an account?</span>
+        <a href="<?= BASE_URL ?>/public/login.php" class="fw-semibold text-decoration-none">Login</a>
+      </div>
+    </form>
   </div>
-</div>
+</section>
 
 <?php require_once __DIR__ . '/../app/includes/footer.php'; ?>

@@ -24,54 +24,61 @@ function sev_badge(string $sev): string {
 }
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<section class="ea-page-head">
   <div>
-    <h1 class="h4 fw-bold mb-0">Concern #<?= (int)$c['id'] ?></h1>
-    <div class="text-muted small">Submitted: <?= e($c['created_at'] ?? '') ?></div>
+    <div class="ea-page-kicker">User Panel</div>
+    <h1 class="ea-page-title">Concern #<?= (int)$c['id'] ?></h1>
+    <p class="ea-page-subtitle">Submitted on <?= e($c['created_at'] ?? '') ?>. Review your concern details and current status below.</p>
   </div>
-  <div class="d-flex gap-2">
-    <a class="btn btn-outline-secondary btn-sm" href="<?= BASE_URL ?>/user/concerns_list.php">← Back</a>
-    <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/user/concern_edit.php?id=<?= (int)$c['id'] ?>">Edit</a>
+  <div class="ea-page-actions">
+    <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/user/concerns_list.php">Back</a>
+    <a class="btn btn-outline-success" href="<?= BASE_URL ?>/user/concern_edit.php?id=<?= (int)$c['id'] ?>">Edit</a>
   </div>
-</div>
+</section>
 
-<div class="card shadow-sm">
-  <div class="card-body">
-
-    <div class="d-flex justify-content-between flex-wrap gap-2">
-      <div>
-        <div class="fw-semibold">Disease (Set by Admin)</div>
-        <div><?= e($c['disease_name'] ?: 'Not identified yet') ?></div>
-      </div>
-      <div class="text-end">
-        <?= sev_badge($c['severity'] ?? 'mild') ?>
-        <span class="badge text-bg-secondary"><?= e($c['status'] ?? 'pending') ?></span>
-      </div>
+<div class="ea-panel">
+  <div class="ea-panel-header">
+    <div>
+      <h2 class="ea-panel-title">Concern Summary</h2>
+      <p class="ea-panel-subtitle">Disease name is updated by the admin after review.</p>
     </div>
-
-    <hr>
-
-    <div class="mb-3">
-      <div class="fw-semibold">Symptoms</div>
-      <div class="text-muted"><?= nl2br(e($c['symptoms'] ?? '')) ?></div>
+    <div class="d-flex flex-wrap gap-2">
+      <?= sev_badge($c['severity'] ?? 'mild') ?>
+      <span class="badge text-bg-secondary"><?= e($c['status'] ?? 'pending') ?></span>
     </div>
+  </div>
 
-    <div class="row g-3">
-      <div class="col-md-6">
-        <div class="fw-semibold">Mental Condition</div>
-        <div class="text-muted"><?= nl2br(e($c['mental_condition'] ?? '—')) ?></div>
-      </div>
-      <div class="col-md-6">
-        <div class="fw-semibold">Digestive Issues</div>
-        <div class="text-muted"><?= nl2br(e($c['digestive_issues'] ?? '—')) ?></div>
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="ea-note-card h-100">
+        <div class="fw-semibold mb-2">Disease (Set by Admin)</div>
+        <div class="ea-meta"><?= e($c['disease_name'] ?: 'Not identified yet') ?></div>
       </div>
     </div>
-
-    <div class="mt-3">
-      <div class="fw-semibold">Old Treatment History</div>
-      <div class="text-muted"><?= nl2br(e($c['old_treatment_history'] ?? '—')) ?></div>
+    <div class="col-lg-6">
+      <div class="ea-note-card h-100">
+        <div class="fw-semibold mb-2">Symptoms</div>
+        <div class="ea-meta"><?= nl2br(e($c['symptoms'] ?? '')) ?></div>
+      </div>
     </div>
-
+    <div class="col-md-6">
+      <div class="ea-note-card h-100">
+        <div class="fw-semibold mb-2">Mental Condition</div>
+        <div class="ea-meta"><?= nl2br(e($c['mental_condition'] ?? '—')) ?></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ea-note-card h-100">
+        <div class="fw-semibold mb-2">Digestive Issues</div>
+        <div class="ea-meta"><?= nl2br(e($c['digestive_issues'] ?? '—')) ?></div>
+      </div>
+    </div>
+    <div class="col-12">
+      <div class="ea-note-card">
+        <div class="fw-semibold mb-2">Old Treatment History</div>
+        <div class="ea-meta"><?= nl2br(e($c['old_treatment_history'] ?? '—')) ?></div>
+      </div>
+    </div>
   </div>
 </div>
 

@@ -3,7 +3,6 @@ require_once __DIR__ . '/../app/core/db.php';
 require_once __DIR__ . '/../app/core/auth.php';
 require_once __DIR__ . '/../app/core/functions.php';
 require_once __DIR__ . '/../app/core/csrf.php';
-require_once __DIR__ . '/../app/includes/header.php';
 
 auth_init();
 csrf_init();
@@ -61,84 +60,72 @@ if (is_post()) {
         }
     }
 }
+
+require_once __DIR__ . '/../app/includes/header.php';
 ?>
 
-<div class="row justify-content-center">
-  <div class="col-12 col-md-6 col-lg-5">
+<section class="ea-auth-shell">
+  <div class="ea-auth-card p-4 p-lg-5">
+    <div class="text-center mb-4">
+      <div class="ea-auth-logo mx-auto mb-3"><i class="bi bi-flower1"></i></div>
+      <h1 class="mb-2" style="font-size:clamp(2.3rem,4vw,3.2rem);">Welcome Back</h1>
+      <p class="ea-subtle mb-0">Login to continue your Ayurvedic wellness journey.</p>
+    </div>
 
-    <div class="card shadow-sm border-0">
-      <div class="card-body p-4">
+    <?php if ($errors): ?>
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          <?php foreach ($errors as $e): ?><li><?= e($e) ?></li><?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endif; ?>
 
-        <div class="text-center mb-3">
-          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success text-white"
-               style="width:56px;height:56px;">
-            <i class="bi bi-shield-lock-fill fs-3"></i>
-          </div>
-          <h1 class="h4 fw-bold mt-3 mb-1">Login</h1>
-          <p class="text-muted mb-0">Choose login type then enter credentials.</p>
-        </div>
+    <div class="d-flex justify-content-center mb-4">
+      <div class="btn-group" role="group" aria-label="Login as">
+        <input type="radio" class="btn-check" name="login_as" id="loginUser" value="user"
+               form="loginForm" <?= $login_as === 'user' ? 'checked' : '' ?>>
+        <label class="btn btn-outline-success" for="loginUser">
+          <i class="bi bi-person me-1"></i>User
+        </label>
 
-        <?php if ($errors): ?>
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              <?php foreach ($errors as $e): ?><li><?= e($e) ?></li><?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-
-        <!-- ✅ Role toggle -->
-        <div class="d-flex justify-content-center mb-3">
-          <div class="btn-group" role="group" aria-label="Login as">
-            <input type="radio" class="btn-check" name="login_as" id="loginUser" value="user"
-                   form="loginForm" <?= $login_as === 'user' ? 'checked' : '' ?>>
-            <label class="btn btn-outline-success" for="loginUser">
-              <i class="bi bi-person"></i> Login as User
-            </label>
-
-            <input type="radio" class="btn-check" name="login_as" id="loginAdmin" value="admin"
-                   form="loginForm" <?= $login_as === 'admin' ? 'checked' : '' ?>>
-            <label class="btn btn-outline-success" for="loginAdmin">
-              <i class="bi bi-shield-lock"></i> Login as Admin
-            </label>
-          </div>
-        </div>
-
-        <form method="post" id="loginForm">
-          <?= csrf_field() ?>
-
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-              <input type="email" name="email" class="form-control" value="<?= e($email) ?>" required>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Password</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-key"></i></span>
-              <input type="password" name="password" id="loginPassword" class="form-control" required>
-              <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('loginPassword', this)"><i class="bi bi-eye"></i></button>
-            </div>
-          </div>
-
-          <button class="btn btn-success w-100">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Login
-          </button>
-
-          <div class="text-center mt-3">
-            <span class="text-muted">New user?</span>
-            <a href="<?= BASE_URL ?>/public/register.php" class="fw-semibold text-success text-decoration-none">
-              Create account
-            </a>
-          </div>
-        </form>
-
+        <input type="radio" class="btn-check" name="login_as" id="loginAdmin" value="admin"
+               form="loginForm" <?= $login_as === 'admin' ? 'checked' : '' ?>>
+        <label class="btn btn-outline-success" for="loginAdmin">
+          <i class="bi bi-shield-lock me-1"></i>Admin
+        </label>
       </div>
     </div>
 
+    <form method="post" id="loginForm">
+      <?= csrf_field() ?>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Email</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          <input type="email" name="email" class="form-control" value="<?= e($email) ?>" required>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Password</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-key"></i></span>
+          <input type="password" name="password" id="loginPassword" class="form-control" required>
+          <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('loginPassword', this)"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+
+      <button class="btn btn-success ea-auth-submit w-100 btn-lg">
+        <i class="bi bi-box-arrow-in-right me-1"></i>Login
+      </button>
+
+      <div class="text-center mt-4">
+        <span class="ea-subtle">New user?</span>
+        <a href="<?= BASE_URL ?>/public/register.php" class="fw-semibold text-decoration-none">Create account</a>
+      </div>
+    </form>
   </div>
-</div>
+</section>
 
 <?php require_once __DIR__ . '/../app/includes/footer.php'; ?>

@@ -3,7 +3,6 @@ require_once __DIR__ . '/../app/core/db.php';
 require_once __DIR__ . '/../app/core/auth.php';
 require_once __DIR__ . '/../app/core/functions.php';
 require_once __DIR__ . '/../app/core/csrf.php';
-require_once __DIR__ . '/../app/includes/header.php';
 
 require_login();
 require_role('admin');
@@ -24,7 +23,6 @@ if (is_post()) {
     if ($name === '') $errors[] = "Category name is required.";
 
     if (!$errors) {
-        // unique check
         $chk = db()->prepare("SELECT id FROM categories WHERE name = ? LIMIT 1");
         $chk->execute([$name]);
         if ($chk->fetch()) {
@@ -37,9 +35,20 @@ if (is_post()) {
         }
     }
 }
+
+require_once __DIR__ . '/../app/includes/header.php';
 ?>
 
-<h1 class="h4 fw-bold mb-3">Add Category</h1>
+<section class="ea-page-head">
+  <div>
+    <div class="ea-page-kicker">eAyurvedic Admin</div>
+    <h1 class="ea-page-title">Add Category</h1>
+    <p class="ea-page-subtitle">Create a category for medicines and keep the catalog structured and easy to manage.</p>
+  </div>
+  <div class="ea-page-actions">
+    <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/admin/categories_list.php">Back to Categories</a>
+  </div>
+</section>
 
 <?php if ($errors): ?>
   <div class="alert alert-danger">
@@ -49,30 +58,37 @@ if (is_post()) {
   </div>
 <?php endif; ?>
 
-<form method="post" class="card shadow-sm">
-  <div class="card-body">
+<form method="post" class="ea-form-card">
+  <div class="ea-form-body">
     <?= csrf_field() ?>
 
-    <div class="mb-3">
-      <label class="form-label">Category Name *</label>
-      <input type="text" name="name" class="form-control" value="<?= e($name) ?>" required>
+    <div class="ea-form-section">
+      <h2 class="ea-form-title">Category Information</h2>
+      <p class="ea-form-help">Use short, clear names so the category is easy to recognize throughout the store and dashboard.</p>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Category Name *</label>
+        <input type="text" name="name" class="form-control" value="<?= e($name) ?>" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Description</label>
+        <textarea name="description" class="form-control" rows="4"><?= e($description) ?></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Status</label>
+        <select name="status" class="form-select">
+          <option value="active" <?= $status==='active'?'selected':'' ?>>Active</option>
+          <option value="inactive" <?= $status==='inactive'?'selected':'' ?>>Inactive</option>
+        </select>
+      </div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Description</label>
-      <textarea name="description" class="form-control" rows="3"><?= e($description) ?></textarea>
+    <div class="ea-form-actions">
+      <button class="btn btn-success">Save Category</button>
+      <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/admin/categories_list.php">Cancel</a>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">Status</label>
-      <select name="status" class="form-select">
-        <option value="active" <?= $status==='active'?'selected':'' ?>>Active</option>
-        <option value="inactive" <?= $status==='inactive'?'selected':'' ?>>Inactive</option>
-      </select>
-    </div>
-
-    <button class="btn btn-success">Save Category</button>
-    <a class="btn btn-secondary" href="<?= BASE_URL ?>/admin/categories_list.php">Cancel</a>
   </div>
 </form>
 

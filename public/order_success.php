@@ -43,7 +43,7 @@ $items = $stmt->fetchAll();
             </div>
             <h1 class="h3 fw-bold">Order Placed Successfully!</h1>
             <p class="text-muted">Order Code: <span class="fw-bold text-dark">#<?= e($order['order_code']) ?></span></p>
-            <p class="mb-0 small">A confirmation email has been sent to your registered address.</p>
+            <p class="mb-0 small">Your payment was successful and your order has been placed.</p>
         </div>
 
         <div class="row g-4 text-start">

@@ -9,7 +9,6 @@ require_role('user');
 
 $u = current_user();
 
-/* Stats */
 $stats = [
   'addresses' => 0,
   'concerns' => 0,
@@ -27,7 +26,6 @@ try {
   $stmt->execute([$u['id']]);
   $stats['concerns'] = (int)$stmt->fetchColumn();
 
-  // Solutions count (join via concerns)
   $stmt = db()->prepare("
     SELECT COUNT(*)
     FROM solutions s
@@ -41,7 +39,6 @@ try {
   $stmt->execute([$u['id']]);
   $stats['orders'] = (int)$stmt->fetchColumn();
 
-  // Cart items count
   $stmt = db()->prepare("SELECT id FROM carts WHERE user_id=? LIMIT 1");
   $stmt->execute([$u['id']]);
   $cart = $stmt->fetch();
@@ -50,11 +47,8 @@ try {
     $stmt->execute([(int)$cart['id']]);
     $stats['cart_items'] = (int)$stmt->fetchColumn();
   }
-} catch (Exception $e) {
-  // keep dashboard functional even if some tables missing
-}
+} catch (Exception $e) {}
 
-/* Recent concerns */
 $recentConcerns = [];
 try {
   $stmt = db()->prepare("
@@ -68,7 +62,6 @@ try {
   $recentConcerns = $stmt->fetchAll();
 } catch (Exception $e) {}
 
-/* Recent orders */
 $recentOrders = [];
 try {
   $stmt = db()->prepare("
@@ -80,6 +73,19 @@ try {
   ");
   $stmt->execute([$u['id']]);
   $recentOrders = $stmt->fetchAll();
+} catch (Exception $e) {}
+
+$recentAddresses = [];
+try {
+  $stmt = db()->prepare("
+    SELECT label, city, district, province, area, street
+    FROM user_addresses
+    WHERE user_id=?
+    ORDER BY id DESC
+    LIMIT 2
+  ");
+  $stmt->execute([$u['id']]);
+  $recentAddresses = $stmt->fetchAll();
 } catch (Exception $e) {}
 
 function badge_severity($sev) {
@@ -111,245 +117,203 @@ function badge_order($st) {
 }
 ?>
 
-<style>
-  .dash-hero{
-    background: radial-gradient(1000px 500px at 10% 10%, rgba(25,135,84,.18), transparent 60%),
-                radial-gradient(900px 500px at 90% 0%, rgba(13,110,253,.12), transparent 55%),
-                linear-gradient(180deg, rgba(25,135,84,.06), rgba(255,255,255,0));
-    border-radius: 1.25rem;
-  }
-  .icon-pill{
-    width: 42px; height: 42px; border-radius: 999px;
-    display:flex; align-items:center; justify-content:center;
-    background: rgba(25,135,84,.12);
-  }
-  .card-hover{ transition: transform .15s ease, box-shadow .15s ease; }
-  .card-hover:hover{ transform: translateY(-2px); box-shadow: 0 .75rem 2rem rgba(0,0,0,.08); }
-  .mini-muted{ color: rgba(0,0,0,.55); }
-</style>
+<div class="ea-dashboard-banner">
+  <div class="ea-page-head mb-0">
+    <div>
+      <div class="ea-page-kicker">User Dashboard</div>
+      <h1 class="ea-page-title">Welcome, <?= e($u['full_name'] ?? 'User') ?></h1>
+      <p class="ea-page-subtitle">Manage your concerns, solutions, addresses, and medicine orders in one place.</p>
+    </div>
+    <div class="ea-page-actions">
+      <a class="btn btn-success" href="<?= BASE_URL ?>/user/concerns_add.php"><i class="bi bi-plus-circle me-1"></i>Add Concern</a>
+      <a class="btn btn-outline-success" href="<?= BASE_URL ?>/public/shop.php"><i class="bi bi-bag-heart me-1"></i>Shop Medicines</a>
+      <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/public/cart.php"><i class="bi bi-cart3 me-1"></i>Cart (<?= (int)$stats['cart_items'] ?>)</a>
+    </div>
+  </div>
+</div>
 
-<!-- HERO -->
-<section class="dash-hero p-4 p-md-5 mb-4 shadow-sm">
-  <div class="row align-items-center g-4">
-    <div class="col-lg-7">
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <div class="icon-pill"><i class="bi bi-person-badge fs-5 text-success"></i></div>
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-4">
+    <div class="ea-stat-card">
+      <div class="ea-stat-icon"><i class="bi bi-clipboard2-heart"></i></div>
+      <div class="ea-stat-label">My Concerns</div>
+      <div class="ea-stat-value"><?= (int)$stats['concerns'] ?></div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-4">
+    <div class="ea-stat-card">
+      <div class="ea-stat-icon"><i class="bi bi-receipt"></i></div>
+      <div class="ea-stat-label">My Orders</div>
+      <div class="ea-stat-value"><?= (int)$stats['orders'] ?></div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-4">
+    <div class="ea-stat-card">
+      <div class="ea-stat-icon"><i class="bi bi-geo-alt"></i></div>
+      <div class="ea-stat-label">My Addresses</div>
+      <div class="ea-stat-value"><?= (int)$stats['addresses'] ?></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="ea-quick-card">
+      <span class="ea-icon-pill"><i class="bi bi-clipboard2-plus"></i></span>
+      <h3>Submit Concern</h3>
+      <p>Add symptoms, health history, and other details for admin review.</p>
+      <a class="btn btn-success" href="<?= BASE_URL ?>/user/concerns_add.php">Add Now</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="ea-quick-card">
+      <span class="ea-icon-pill"><i class="bi bi-chat-left-dots"></i></span>
+      <h3>My Solutions</h3>
+      <p>Track diagnosis updates and read the latest treatment guidance.</p>
+      <a class="btn btn-outline-success" href="<?= BASE_URL ?>/user/solutions.php">Open</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="ea-quick-card">
+      <span class="ea-icon-pill"><i class="bi bi-bag-check"></i></span>
+      <h3>Shop Medicines</h3>
+      <p>Browse Ayurvedic products in the same design system as your account pages.</p>
+      <a class="btn btn-outline-success" href="<?= BASE_URL ?>/public/shop.php">Shop</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="ea-quick-card">
+      <span class="ea-icon-pill"><i class="bi bi-map"></i></span>
+      <h3>Manage Addresses</h3>
+      <p>Keep delivery addresses updated for faster checkout and order placement.</p>
+      <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/user/addresses.php">My Addresses</a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="ea-panel h-100">
+      <div class="ea-panel-header">
         <div>
-          <div class="fw-bold fs-4 mb-0">Welcome, <?= e($u['full_name'] ?? 'User') ?></div>
-          <div class="mini-muted">Manage your concerns, view solutions, and order Ayurvedic medicines.</div>
+          <h2 class="ea-panel-title">Recent Concerns</h2>
+          <p class="ea-panel-subtitle">See the latest concerns you submitted and their review status.</p>
         </div>
+        <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/user/concerns_list.php">View All</a>
       </div>
 
-      <div class="mt-3 d-flex flex-wrap gap-2">
-        <a class="btn btn-success" href="<?= BASE_URL ?>/user/concerns_add.php">
-          <i class="bi bi-plus-circle me-1"></i> Add Concern
-        </a>
-        <a class="btn btn-outline-success" href="<?= BASE_URL ?>/public/shop.php">
-          <i class="bi bi-bag-heart me-1"></i> Shop Medicines
-        </a>
-        <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/public/cart.php">
-          <i class="bi bi-cart3 me-1"></i> Cart (<?= (int)$stats['cart_items'] ?>)
-        </a>
-      </div>
-
-      <div class="mt-4">
-        <div class="small text-muted">Algorithm switches (for demo):</div>
-        <div class="d-flex flex-wrap gap-2 mt-1">
-          <span class="badge text-bg-light border">
-            Master: <b><?= (ALGO_ENABLED ? 'ON' : 'OFF') ?></b>
-          </span>
-          <span class="badge text-bg-light border">
-            Cart Totals: <b><?= (ALGO_ENABLED && ALGO_CART_TOTALS ? 'ON' : 'OFF') ?></b>
-          </span>
-          <span class="badge text-bg-light border">
-            Severity: <b><?= (ALGO_ENABLED && ALGO_SEVERITY_SCORE ? 'ON' : 'OFF') ?></b>
-          </span>
-          <span class="badge text-bg-light border">
-            Symptom Match: <b><?= (ALGO_ENABLED && ALGO_SYMPTOM_MATCH ? 'ON' : 'OFF') ?></b>
-          </span>
-          <span class="badge text-bg-light border">
-            Product Recommend: <b><?= (ALGO_ENABLED && ALGO_PRODUCT_RECOMMEND ? 'ON' : 'OFF') ?></b>
-          </span>
+      <?php if (!$recentConcerns): ?>
+        <div class="ea-empty-state">
+          <span class="ea-icon-pill"><i class="bi bi-clipboard2-heart"></i></span>
+          <h3>No concerns submitted</h3>
+          <p>Use the “Add Concern” action to submit your first health concern.</p>
         </div>
-      </div>
-    </div>
-
-    <div class="col-lg-5">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="fw-bold"><i class="bi bi-graph-up-arrow text-success me-2"></i>Quick Stats</div>
-            <a class="small text-decoration-none" href="<?= BASE_URL ?>/public/index.php">Home</a>
-          </div>
-          <div class="row g-3 text-center">
-            <div class="col-6">
-              <div class="fw-bold fs-4"><?= (int)$stats['concerns'] ?></div>
-              <div class="mini-muted small">Concerns</div>
-            </div>
-            <div class="col-6">
-              <div class="fw-bold fs-4"><?= (int)$stats['solutions'] ?></div>
-              <div class="mini-muted small">Solutions</div>
-            </div>
-            <div class="col-6">
-              <div class="fw-bold fs-4"><?= (int)$stats['orders'] ?></div>
-              <div class="mini-muted small">Orders</div>
-            </div>
-            <div class="col-6">
-              <div class="fw-bold fs-4"><?= (int)$stats['addresses'] ?></div>
-              <div class="mini-muted small">Addresses</div>
-            </div>
-          </div>
-
-          <hr class="my-4">
-
-          <div class="d-grid gap-2">
-            <a class="btn btn-outline-primary" href="<?= BASE_URL ?>/user/concerns_list.php">
-              <i class="bi bi-clipboard2-heart me-1"></i> My Concerns
-            </a>
-            <a class="btn btn-outline-success" href="<?= BASE_URL ?>/user/solutions.php">
-              <i class="bi bi-chat-left-text me-1"></i> My Solutions
-            </a>
-            <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/user/orders.php">
-              <i class="bi bi-receipt me-1"></i> My Orders
-            </a>
-            <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/user/addresses.php">
-              <i class="bi bi-geo-alt me-1"></i> My Addresses
-            </a>
-          </div>
-
-          <div class="small text-muted mt-3">
-            If any page shows “not found”, we’ll create it in the next steps.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- MAIN CARDS -->
-<section class="mb-4">
-  <div class="row g-3">
-    <div class="col-md-6 col-lg-3">
-      <div class="card card-hover h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="icon-pill mb-3"><i class="bi bi-clipboard2-plus fs-5 text-success"></i></div>
-          <div class="fw-bold">Submit Concern</div>
-          <div class="mini-muted small mb-3">Add symptoms, history, mental and digestive details.</div>
-          <a class="btn btn-success btn-sm" href="<?= BASE_URL ?>/user/concerns_add.php">Add Now</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-3">
-      <div class="card card-hover h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="icon-pill mb-3"><i class="bi bi-chat-left-dots fs-5 text-success"></i></div>
-          <div class="fw-bold">View Solutions</div>
-          <div class="mini-muted small mb-3">Check admin recommendations for your submitted concerns.</div>
-          <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/user/solutions.php">Open</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-3">
-      <div class="card card-hover h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="icon-pill mb-3"><i class="bi bi-bag-check fs-5 text-success"></i></div>
-          <div class="fw-bold">Shop Medicines</div>
-          <div class="mini-muted small mb-3">Browse, search and buy Ayurvedic medicines.</div>
-          <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/public/shop.php">Shop</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-3">
-      <div class="card card-hover h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="icon-pill mb-3"><i class="bi bi-cart-check fs-5 text-success"></i></div>
-          <div class="fw-bold">Cart & Checkout</div>
-          <div class="mini-muted small mb-3">Review cart, choose address, and place orders.</div>
-          <a class="btn btn-outline-secondary btn-sm" href="<?= BASE_URL ?>/public/cart.php">Open Cart</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- RECENT ACTIVITY -->
-<section class="mb-4">
-  <div class="row g-3">
-    <div class="col-lg-7">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="fw-bold"><i class="bi bi-clipboard2-heart me-2 text-success"></i>Recent Concerns</div>
-            <a class="small text-decoration-none" href="<?= BASE_URL ?>/user/concerns_list.php">View all</a>
-          </div>
-
-          <?php if (!$recentConcerns): ?>
-            <div class="alert alert-info mb-0">No concerns submitted yet.</div>
-          <?php else: ?>
-            <div class="table-responsive">
-              <table class="table table-sm align-middle mb-0">
-                <thead class="table-light">
+      <?php else: ?>
+        <div class="ea-table-wrap shadow-none">
+          <div class="table-responsive shadow-none">
+            <table class="table ea-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Disease</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($recentConcerns as $c): ?>
                   <tr>
-                    <th>ID</th>
-                    <th>Disease</th>
-                    <th>Severity</th>
-                    <th>Status</th>
-                    <th>Created</th>
+                    <td><?= (int)$c['id'] ?></td>
+                    <td><?= e($c['disease_name'] ?? '-') ?></td>
+                    <td><?= badge_severity($c['severity'] ?? 'mild') ?></td>
+                    <td><?= badge_concern_status($c['status'] ?? 'pending') ?></td>
+                    <td class="ea-meta"><?= e($c['created_at'] ?? '') ?></td>
                   </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($recentConcerns as $c): ?>
-                    <tr>
-                      <td><?= (int)$c['id'] ?></td>
-                      <td><?= e($c['disease_name'] ?? '-') ?></td>
-                      <td><?= badge_severity($c['severity'] ?? 'mild') ?></td>
-                      <td><?= badge_concern_status($c['status'] ?? 'pending') ?></td>
-                      <td class="text-muted small"><?= e($c['created_at'] ?? '') ?></td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-5">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="fw-bold"><i class="bi bi-receipt me-2 text-success"></i>Recent Orders</div>
-            <a class="small text-decoration-none" href="<?= BASE_URL ?>/user/orders.php">View all</a>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
           </div>
-
-          <?php if (!$recentOrders): ?>
-            <div class="alert alert-info mb-0">No orders yet.</div>
-          <?php else: ?>
-            <div class="list-group list-group-flush">
-              <?php foreach ($recentOrders as $o): ?>
-                <div class="list-group-item px-0">
-                  <div class="d-flex justify-content-between">
-                    <div class="fw-semibold"><?= e($o['order_code']) ?></div>
-                    <div class="fw-semibold">NPR <?= number_format((float)$o['total_amount'], 2) ?></div>
-                  </div>
-                  <div class="d-flex justify-content-between mt-1">
-                    <div><?= badge_order($o['order_status'] ?? 'pending') ?> <?= badge_pay($o['payment_status'] ?? 'unpaid') ?></div>
-                    <div class="text-muted small"><?= e($o['created_at'] ?? '') ?></div>
-                  </div>
-                </div>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
-
         </div>
-      </div>
+      <?php endif; ?>
     </div>
   </div>
-</section>
+
+  <div class="col-lg-5">
+    <div class="ea-panel h-100">
+      <div class="ea-panel-header">
+        <div>
+          <h2 class="ea-panel-title">Recent Orders</h2>
+          <p class="ea-panel-subtitle">Track your latest medicine purchases and payment states.</p>
+        </div>
+        <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/user/orders.php">View All</a>
+      </div>
+
+      <?php if (!$recentOrders): ?>
+        <div class="ea-empty-state">
+          <span class="ea-icon-pill"><i class="bi bi-receipt"></i></span>
+          <h3>No orders yet</h3>
+          <p>Your order activity will appear here after you complete checkout.</p>
+        </div>
+      <?php else: ?>
+        <div class="d-flex flex-column gap-3">
+          <?php foreach ($recentOrders as $o): ?>
+            <div class="p-3 rounded-4" style="background:#fcfbf8;border:1px solid rgba(26,71,42,0.08);">
+              <div class="d-flex justify-content-between gap-3">
+                <div class="fw-semibold"><?= e($o['order_code']) ?></div>
+                <div class="fw-semibold">NPR <?= number_format((float)$o['total_amount'], 2) ?></div>
+              </div>
+              <div class="d-flex flex-wrap justify-content-between gap-2 mt-2">
+                <div><?= badge_order($o['order_status'] ?? 'pending') ?> <?= badge_pay($o['payment_status'] ?? 'unpaid') ?></div>
+                <div class="ea-meta"><?= e($o['created_at'] ?? '') ?></div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-7">
+    <div class="ea-panel h-100">
+      <div class="ea-panel-header">
+        <div>
+          <h2 class="ea-panel-title">Saved Addresses</h2>
+          <p class="ea-panel-subtitle">A quick view of your latest delivery locations used during checkout.</p>
+        </div>
+        <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/user/addresses.php">Manage</a>
+      </div>
+
+      <?php if (!$recentAddresses): ?>
+        <div class="ea-empty-state">
+          <span class="ea-icon-pill"><i class="bi bi-geo-alt"></i></span>
+          <h3>No addresses saved</h3>
+          <p>Add a delivery address so ordering medicines is faster next time.</p>
+        </div>
+      <?php else: ?>
+        <div class="row g-3">
+          <?php foreach ($recentAddresses as $address): ?>
+            <div class="col-md-6">
+              <div class="ea-note-card h-100">
+                <div class="fw-semibold mb-2"><?= e($address['label'] ?: 'Address') ?></div>
+                <div class="ea-meta">
+                  <?= e($address['city'] ?? '') ?><?= !empty($address['district']) ? ', ' . e($address['district']) : '' ?>
+                  <?= !empty($address['province']) ? ', ' . e($address['province']) : '' ?>
+                </div>
+                <?php if (!empty($address['area']) || !empty($address['street'])): ?>
+                  <div class="ea-meta mt-1">
+                    <?= e(trim(($address['area'] ?? '') . ' ' . ($address['street'] ?? ''))) ?>
+                  </div>
+                <?php endif; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
 
 <?php require_once __DIR__ . '/../app/includes/footer.php'; ?>

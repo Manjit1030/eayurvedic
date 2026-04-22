@@ -3,13 +3,11 @@ require_once __DIR__ . '/../app/core/db.php';
 require_once __DIR__ . '/../app/core/auth.php';
 require_once __DIR__ . '/../app/core/functions.php';
 require_once __DIR__ . '/../app/core/csrf.php';
-require_once __DIR__ . '/../app/includes/header.php';
 
 require_login();
 require_role('admin');
 csrf_init();
 
-/* Fetch active categories */
 $cats = db()->query("SELECT id, name FROM categories WHERE status='active' ORDER BY name")->fetchAll();
 
 $errors = [];
@@ -33,10 +31,8 @@ if (is_post()) {
     if ($price <= 0) $errors[] = "Valid price is required.";
     if ($stock < 0) $errors[] = "Stock cannot be negative.";
 
-    /* Slug (basic) */
     $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/', '-', $name), '-'));
 
-    /* Ensure unique slug */
     if (!$errors) {
         $chk = db()->prepare("SELECT id FROM products WHERE slug = ? LIMIT 1");
         $chk->execute([$slug]);
@@ -45,14 +41,13 @@ if (is_post()) {
         }
     }
 
-    /* Image upload (safe) */
     $imagePath = null;
 
     if (empty($_FILES['image']['name'])) {
         $errors[] = "Product image is required.";
     } else {
         $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
-        $maxSize = 2 * 1024 * 1024; // 2MB
+        $maxSize = 2 * 1024 * 1024;
 
         if (!in_array($_FILES['image']['type'], $allowedMime)) {
             $errors[] = "Only JPG, PNG, WEBP images are allowed.";
@@ -78,13 +73,12 @@ if (is_post()) {
                 if (!move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
                     $errors[] = "Image upload failed. Check folder permissions.";
                 } else {
-                    $imagePath = 'uploads/products/' . $newName; // stored relative to /public
+                    $imagePath = 'uploads/products/' . $newName;
                 }
             }
         }
     }
 
-    /* Insert product */
     if (!$errors) {
         $stmt = db()->prepare("
             INSERT INTO products
@@ -105,9 +99,20 @@ if (is_post()) {
         redirect('/admin/products_list.php');
     }
 }
+
+require_once __DIR__ . '/../app/includes/header.php';
 ?>
 
-<h1 class="h4 fw-bold mb-3">Add Product (Medicine)</h1>
+<section class="ea-page-head">
+  <div>
+    <div class="ea-page-kicker">eAyurvedic Admin</div>
+    <h1 class="ea-page-title">Add Product</h1>
+    <p class="ea-page-subtitle">Create a medicine listing with category, pricing, stock, description, and image upload.</p>
+  </div>
+  <div class="ea-page-actions">
+    <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/admin/products_list.php">Back to Products</a>
+  </div>
+</section>
 
 <?php if ($errors): ?>
   <div class="alert alert-danger">
@@ -117,50 +122,63 @@ if (is_post()) {
   </div>
 <?php endif; ?>
 
-<form method="post" enctype="multipart/form-data" class="card shadow-sm">
-  <div class="card-body">
+<form method="post" enctype="multipart/form-data" class="ea-form-card">
+  <div class="ea-form-body">
     <?= csrf_field() ?>
 
-    <div class="mb-3">
-      <label class="form-label">Category *</label>
-      <select name="category_id" class="form-select" required>
-        <option value="">-- Select Category --</option>
-        <?php foreach ($cats as $c): ?>
-          <option value="<?= (int)$c['id'] ?>" <?= $category_id==(int)$c['id']?'selected':'' ?>>
-            <?= e($c['name']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
+    <div class="ea-form-section">
+      <h2 class="ea-form-title">Product Details</h2>
+      <p class="ea-form-help">Fill in the core information used in the public shop, product pages, cart, and checkout flow.</p>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Category *</label>
+        <select name="category_id" class="form-select" required>
+          <option value="">-- Select Category --</option>
+          <?php foreach ($cats as $c): ?>
+            <option value="<?= (int)$c['id'] ?>" <?= $category_id==(int)$c['id']?'selected':'' ?>>
+              <?= e($c['name']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Medicine Name *</label>
+        <input type="text" name="name" class="form-control" value="<?= e($name) ?>" required>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Price (NPR) *</label>
+          <input type="number" step="0.01" name="price" class="form-control" value="<?= e((string)$price) ?>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Stock *</label>
+          <input type="number" name="stock" class="form-control" value="<?= e((string)$stock) ?>" required>
+        </div>
+      </div>
+
+      <div class="mt-3 mb-3">
+        <label class="form-label fw-semibold">Description</label>
+        <textarea name="description" class="form-control" rows="4"><?= e($description) ?></textarea>
+      </div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Medicine Name *</label>
-      <input type="text" name="name" class="form-control" value="<?= e($name) ?>" required>
+    <div class="ea-form-section">
+      <h2 class="ea-form-title">Product Image</h2>
+      <p class="ea-form-help">Upload a clear medicine image for product cards and detail pages.</p>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Product Image *</label>
+        <input type="file" name="image" class="form-control" accept="image/*" required>
+        <div class="form-text">JPG, PNG, WEBP only (max 2MB)</div>
+      </div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Price (NPR) *</label>
-      <input type="number" step="0.01" name="price" class="form-control" value="<?= e((string)$price) ?>" required>
+    <div class="ea-form-actions">
+      <button class="btn btn-success">Save Product</button>
+      <a href="<?= BASE_URL ?>/admin/products_list.php" class="btn btn-outline-secondary">Cancel</a>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">Stock *</label>
-      <input type="number" name="stock" class="form-control" value="<?= e((string)$stock) ?>" required>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Description</label>
-      <textarea name="description" class="form-control" rows="3"><?= e($description) ?></textarea>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Product Image *</label>
-      <input type="file" name="image" class="form-control" accept="image/*" required>
-      <div class="form-text">JPG, PNG, WEBP only (max 2MB)</div>
-    </div>
-
-    <button class="btn btn-success">Save Product</button>
-    <a href="<?= BASE_URL ?>/admin/products_list.php" class="btn btn-secondary">Cancel</a>
   </div>
 </form>
 

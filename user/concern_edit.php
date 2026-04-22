@@ -3,7 +3,6 @@ require_once __DIR__ . '/../app/core/db.php';
 require_once __DIR__ . '/../app/core/auth.php';
 require_once __DIR__ . '/../app/core/functions.php';
 require_once __DIR__ . '/../app/core/csrf.php';
-require_once __DIR__ . '/../app/includes/header.php';
 
 require_login();
 require_role('user');
@@ -52,12 +51,20 @@ if (is_post()) {
     redirect('/user/concern_view.php?id=' . $id);
   }
 }
+
+require_once __DIR__ . '/../app/includes/header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4 fw-bold mb-0">Edit Concern #<?= (int)$id ?></h1>
-  <a class="btn btn-outline-secondary btn-sm" href="<?= BASE_URL ?>/user/concern_view.php?id=<?= (int)$id ?>">← Back</a>
-</div>
+<section class="ea-page-head">
+  <div>
+    <div class="ea-page-kicker">User Panel</div>
+    <h1 class="ea-page-title">Edit Concern #<?= (int)$id ?></h1>
+    <p class="ea-page-subtitle">Update your concern details and resubmit it for admin review.</p>
+  </div>
+  <div class="ea-page-actions">
+    <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/user/concern_view.php?id=<?= (int)$id ?>">Back</a>
+  </div>
+</section>
 
 <?php if ($errors): ?>
   <div class="alert alert-danger">
@@ -69,31 +76,39 @@ if (is_post()) {
   Editing a concern will mark it as <b>pending</b> again so admin can review the updated details.
 </div>
 
-<form method="post" class="card shadow-sm">
-  <div class="card-body">
+<form method="post" class="ea-form-card">
+  <div class="ea-form-body">
     <?= csrf_field() ?>
 
-    <div class="mb-3">
-      <label class="form-label">Symptoms *</label>
-      <textarea name="symptoms" class="form-control" rows="4" required><?= e($symptoms) ?></textarea>
+    <div class="ea-form-section">
+      <h2 class="ea-form-title">Update Health Details</h2>
+      <p class="ea-form-help">Keep the information accurate so the admin receives the latest version of your concern.</p>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Symptoms *</label>
+        <textarea name="symptoms" class="form-control" rows="4" required><?= e($symptoms) ?></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Mental Condition (optional)</label>
+        <textarea name="mental_condition" class="form-control" rows="3"><?= e($mental) ?></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Digestive Issues (optional)</label>
+        <textarea name="digestive_issues" class="form-control" rows="3"><?= e($digestive) ?></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Old Treatment History (optional)</label>
+        <textarea name="old_treatment_history" class="form-control" rows="3"><?= e($old) ?></textarea>
+      </div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Mental Condition (optional)</label>
-      <textarea name="mental_condition" class="form-control" rows="2"><?= e($mental) ?></textarea>
+    <div class="ea-form-actions">
+      <button class="btn btn-success">Save Changes</button>
+      <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/user/concern_view.php?id=<?= (int)$id ?>">Cancel</a>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">Digestive Issues (optional)</label>
-      <textarea name="digestive_issues" class="form-control" rows="2"><?= e($digestive) ?></textarea>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Old Treatment History (optional)</label>
-      <textarea name="old_treatment_history" class="form-control" rows="2"><?= e($old) ?></textarea>
-    </div>
-
-    <button class="btn btn-success">Save Changes</button>
   </div>
 </form>
 

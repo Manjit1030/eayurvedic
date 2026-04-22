@@ -26,11 +26,6 @@ define('DB_PASS', ''); // XAMPP default is empty
 // Master switch: if false -> ALL algorithms behave like "without algorithm"
 define('ALGO_ENABLED', true);
 
-// Individual switches: control algorithms one-by-one
-define('ALGO_CART_TOTALS', true);
-define('ALGO_SEVERITY_SCORE', true);
-define('ALGO_SYMPTOM_MATCH', true);
-define('ALGO_PRODUCT_RECOMMEND', true);
 
 // ==============================
 // KHALTI PAYMENT KEYS (TEST)

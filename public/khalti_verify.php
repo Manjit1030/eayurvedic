@@ -77,9 +77,21 @@ if (isset($res_data['status']) && $res_data['status'] === 'Completed') {
     }
 
 } else {
-    // Update Payment as failed
-    $updP = db()->prepare("UPDATE payments SET status='failed', raw_response=? WHERE id=?");
-    $updP->execute([$response, $payment['id']]);
+    db()->beginTransaction();
+    try {
+        // Update Payment as failed
+        $updP = db()->prepare("UPDATE payments SET status='failed', raw_response=? WHERE id=?");
+        $updP->execute([$response, $payment['id']]);
+
+        // Keep the order history in sync for admin/user views
+        $updO = db()->prepare("UPDATE orders SET payment_status='failed' WHERE id=?");
+        $updO->execute([$order_id]);
+
+        db()->commit();
+    } catch (Exception $e) {
+        db()->rollBack();
+        die("Verification Error: " . $e->getMessage());
+    }
     
     redirect('/public/order_failed.php?code=' . urlencode($purchase_order_id));
 }

@@ -22,8 +22,37 @@ $stmt = db()->prepare("SELECT main_image FROM products WHERE id=? LIMIT 1");
 $stmt->execute([$id]);
 $p = $stmt->fetch();
 
-$del = db()->prepare("DELETE FROM products WHERE id=?");
-$del->execute([$id]);
+if (!$p) {
+    $_SESSION['product_error_message'] = 'Product not found.';
+    redirect('/admin/products_list.php');
+}
+
+$orderCheck = db()->prepare("SELECT COUNT(*) FROM order_items WHERE product_id=?");
+$orderCheck->execute([$id]);
+$orderCount = (int)$orderCheck->fetchColumn();
+
+if ($orderCount > 0) {
+    $_SESSION['product_error_message'] = 'This product cannot be deleted because it is already used in order history.';
+    redirect('/admin/products_list.php');
+}
+
+$cartCheck = db()->prepare("SELECT COUNT(*) FROM cart_items WHERE product_id=?");
+$cartCheck->execute([$id]);
+$cartCount = (int)$cartCheck->fetchColumn();
+
+if ($cartCount > 0) {
+    $_SESSION['product_error_message'] = 'This product cannot be deleted because it is currently present in user carts.';
+    redirect('/admin/products_list.php');
+}
+
+try {
+    $del = db()->prepare("DELETE FROM products WHERE id=?");
+    $del->execute([$id]);
+    $_SESSION['product_success_message'] = 'Product deleted successfully.';
+} catch (PDOException $e) {
+    $_SESSION['product_error_message'] = 'Unable to delete this product right now.';
+    redirect('/admin/products_list.php');
+}
 
 if ($p && !empty($p['main_image'])) {
     $file = __DIR__ . '/../public/' . $p['main_image'];
