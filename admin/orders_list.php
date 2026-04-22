@@ -233,4 +233,8 @@ function submitOrderUpdate(orderId, orderStatus, paymentStatus) {
 }
 </script>
 
+<<<<<<< HEAD
 <?php require_once __DIR__ . '/../app/includes/footer.php'; ?>
+=======
+<?php require_once __DIR__ . '/../app/includes/footer.php'; ?>
+>>>>>>> 528f9600adde267f635884e5b6ba7c8521299fdd

@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   payment_method ENUM('cash', 'khalti') NOT NULL DEFAULT 'cash',
   payment_status ENUM('unpaid','pending','paid','failed','refunded') NOT NULL DEFAULT 'unpaid',
-  order_status ENUM('pending','shipping','delivered') NOT NULL DEFAULT 'pending',
+  order_status ENUM('pending','shipped','delivered') NOT NULL DEFAULT 'pending',
   notes TEXT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
