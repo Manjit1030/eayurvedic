@@ -9,7 +9,7 @@
           <div class="font-display" style="font-size:2rem;color:#c9a84c;font-weight:700;">eAyurvedic</div>
         </div>
         <p class="mb-0" style="color:rgba(250,247,242,0.78);max-width:32rem;">
-          A modern Ayurvedic consultation and medicine store platform designed for trusted wellness guidance, smoother care journeys, and a polished final-year project presentation.
+          A modern Ayurvedic consultation and medicine store platform designed for trusted wellness guidance, smoother care journeys.
         </p>
       </div>
       <div class="col-sm-6 col-lg-5">

@@ -74,7 +74,7 @@ require_once __DIR__ . '/../app/includes/header.php';
 </section>
 
 <div class="alert alert-secondary">
-  <b>Algorithm Mode:</b> <?= e($algoMode) ?> (Severity will be auto-calculated when enabled)
+  <b>Algorithm Mode:</b> <?= e($algoMode) ?> 
 </div>
 
 <?php if ($errors): ?>

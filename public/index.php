@@ -430,7 +430,7 @@ try {
           <div class="col-md-6">
             <div class="algorithm-card p-4">
               <h3 class="mb-2">Clear Product Details</h3>
-              <p class="ea-subtle mb-0">Each medicine listing explains price, stock, and category in a clean and readable way.</p>
+              <p class="ea-subtle mb-0"></p>
             </div>
           </div>
           <div class="col-md-6">
@@ -466,13 +466,13 @@ try {
     <div>
       <p class="text-uppercase small fw-semibold mb-2" style="letter-spacing:.24em;color:var(--ea-gold);">Featured Categories</p>
       <h2 class="section-title mb-1">Browse your wellness collection</h2>
-      <p class="ea-subtle mb-0">These categories are loaded directly from your live database.</p>
+      <p class="ea-subtle mb-0"></p>
     </div>
     <a class="btn btn-outline-success" href="<?= BASE_URL ?>/public/shop.php">View Shop</a>
   </div>
 
   <?php if (!$cats): ?>
-    <div class="alert alert-info">Categories will appear here once they are added to the store.</div>
+    <div class="alert alert-info"></div>
   <?php else: ?>
     <div class="row g-4">
       <?php foreach ($cats as $c): ?>
@@ -496,13 +496,13 @@ try {
     <div>
       <p class="text-uppercase small fw-semibold mb-2" style="letter-spacing:.24em;color:var(--ea-gold);">Latest Medicines</p>
       <h2 class="section-title mb-1">Fresh additions to the store</h2>
-      <p class="ea-subtle mb-0">Product cards now feel more premium while still using your existing live PHP data.</p>
+      <p class="ea-subtle mb-0">Product cards now feel more premium.</p>
     </div>
     <a class="btn btn-success" href="<?= BASE_URL ?>/public/shop.php">Shop Now</a>
   </div>
 
   <?php if (!$products): ?>
-    <div class="alert alert-info">Products will appear here once the store catalog is updated.</div>
+    <div class="alert alert-info"></div>
   <?php else: ?>
     <div class="row g-4">
       <?php foreach ($products as $p): ?>
