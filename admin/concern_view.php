@@ -9,6 +9,9 @@ require_login();
 require_role('admin');
 csrf_init();
 
+$_SESSION['doctors_error_message'] = 'Patient concern management has moved to the doctor panel.';
+redirect('/admin/doctors.php');
+
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) die("Invalid concern id.");
 

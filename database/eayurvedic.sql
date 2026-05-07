@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(190) NOT NULL UNIQUE,
   phone VARCHAR(30) NULL,
   password_hash VARCHAR(255) NOT NULL,
-  role ENUM('user','admin') NOT NULL DEFAULT 'user',
+  role ENUM('user','admin','doctor') NOT NULL DEFAULT 'user',
   status ENUM('active','blocked','removed') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS patient_concerns (
 CREATE TABLE IF NOT EXISTS solutions (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   concern_id BIGINT UNSIGNED NOT NULL,
-  admin_id BIGINT UNSIGNED NOT NULL,
+  admin_id BIGINT UNSIGNED NULL,
+  doctor_id BIGINT UNSIGNED NULL,
   solution_title VARCHAR(190) NOT NULL,
   solution_details TEXT NOT NULL,
   recommended_products TEXT NULL,
@@ -71,7 +72,37 @@ CREATE TABLE IF NOT EXISTS solutions (
   CONSTRAINT fk_solution_concern FOREIGN KEY (concern_id) REFERENCES patient_concerns(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_solution_admin FOREIGN KEY (admin_id) REFERENCES users(id)
-    ON DELETE RESTRICT ON UPDATE CASCADE
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_solution_doctor FOREIGN KEY (doctor_id) REFERENCES users(id)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- -------------------------
+-- DOCTOR PROFILES
+-- -------------------------
+CREATE TABLE IF NOT EXISTS doctor_profiles (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  full_name VARCHAR(150) NOT NULL,
+  gender VARCHAR(20) NOT NULL,
+  date_of_birth DATE NOT NULL,
+  years_of_experience INT NOT NULL,
+  qualification VARCHAR(255) NOT NULL,
+  ayurveda_degree_certificate VARCHAR(255) NOT NULL,
+  clinic_license VARCHAR(255) NOT NULL,
+  verification_status ENUM('pending','verified','rejected') NOT NULL DEFAULT 'pending',
+  rejection_reason TEXT NULL,
+  verified_by BIGINT UNSIGNED NULL,
+  verified_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL,
+  UNIQUE KEY ux_doctor_profiles_user_id (user_id),
+  KEY idx_doctor_profiles_status (verification_status),
+  KEY idx_doctor_profiles_verified_by (verified_by),
+  CONSTRAINT fk_doctor_profiles_user FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_doctor_profiles_verified_by FOREIGN KEY (verified_by) REFERENCES users(id)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 -- -------------------------

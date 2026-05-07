@@ -11,6 +11,7 @@ $errors = [];
 $email = '';
 $login_as = 'user'; // default
 $registered = isset($_GET['registered']) && $_GET['registered'] === '1';
+$doctorRegistered = isset($_GET['doctor_registered']) && $_GET['doctor_registered'] === '1';
 $accountDeleted = isset($_GET['account_deleted']) && $_GET['account_deleted'] === '1';
 
 if (is_post()) {
@@ -18,7 +19,8 @@ if (is_post()) {
 
     $email = trim($_POST['email'] ?? '');
     $password = (string)($_POST['password'] ?? '');
-    $login_as = ($_POST['login_as'] ?? 'user') === 'admin' ? 'admin' : 'user';
+    $selectedRole = $_POST['login_as'] ?? 'user';
+    $login_as = in_array($selectedRole, ['user', 'doctor', 'admin'], true) ? $selectedRole : 'user';
 
     if ($email === '') {
         $errors[] = "Email is required.";
@@ -45,10 +47,8 @@ if (is_post()) {
             // ✅ Enforce selected role
             $role = $user['role'] ?? 'user';
 
-            if ($login_as === 'admin' && $role !== 'admin') {
-                $errors[] = "This account is not an admin account.";
-            } elseif ($login_as === 'user' && $role !== 'user') {
-                $errors[] = "Please select 'Login as Admin' for this account.";
+            if ($role !== $login_as) {
+                $errors[] = "Selected role does not match this account.";
             } else {
                 // Login success
                 session_regenerate_id(true);
@@ -63,6 +63,8 @@ if (is_post()) {
                 // redirect based on chosen role
                 if ($login_as === 'admin') {
                     redirect('/admin/index.php');
+                } elseif ($login_as === 'doctor') {
+                    redirect('/doctor/dashboard.php');
                 } else {
                     redirect('/user/index.php');
                 }
@@ -86,6 +88,10 @@ require_once __DIR__ . '/../app/includes/header.php';
       <div class="alert alert-success">Your account has been created. Please log in.</div>
     <?php endif; ?>
 
+    <?php if ($doctorRegistered): ?>
+      <div class="alert alert-success">Your doctor account has been created. Please log in and complete professional registration.</div>
+    <?php endif; ?>
+
     <?php if ($accountDeleted): ?>
       <div class="alert alert-warning">Your account has been removed and you can no longer log in with it.</div>
     <?php endif; ?>
@@ -104,6 +110,12 @@ require_once __DIR__ . '/../app/includes/header.php';
                form="loginForm" <?= $login_as === 'user' ? 'checked' : '' ?>>
         <label class="btn btn-outline-success" for="loginUser">
           <i class="bi bi-person me-1"></i>User
+        </label>
+
+        <input type="radio" class="btn-check" name="login_as" id="loginDoctor" value="doctor"
+               form="loginForm" <?= $login_as === 'doctor' ? 'checked' : '' ?>>
+        <label class="btn btn-outline-success" for="loginDoctor">
+          <i class="bi bi-heart-pulse me-1"></i>Doctor
         </label>
 
         <input type="radio" class="btn-check" name="login_as" id="loginAdmin" value="admin"
@@ -140,7 +152,7 @@ require_once __DIR__ . '/../app/includes/header.php';
 
       <div class="text-center mt-4">
         <span class="ea-subtle">New user?</span>
-        <a href="<?= BASE_URL ?>/public/register.php" class="fw-semibold text-decoration-none">Create account</a>
+        <a href="<?= BASE_URL ?>/public/signup.php" class="fw-semibold text-decoration-none">Signup</a>
       </div>
     </form>
   </div>

@@ -2,10 +2,12 @@
 require_once __DIR__ . '/../app/core/db.php';
 require_once __DIR__ . '/../app/core/auth.php';
 require_once __DIR__ . '/../app/core/functions.php';
-require_once __DIR__ . '/../app/includes/header.php';
 
 require_login();
 require_role('admin');
+
+$_SESSION['doctors_error_message'] = 'Patient concern management has moved to the doctor panel.';
+redirect('/admin/doctors.php');
 
 $successMessage = $_SESSION['admin_success_message'] ?? null;
 unset($_SESSION['admin_success_message']);

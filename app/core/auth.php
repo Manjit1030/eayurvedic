@@ -57,6 +57,34 @@ function require_role(string $role): void
     }
 }
 
+function get_doctor_profile(int $user_id): ?array
+{
+    $stmt = db()->prepare("SELECT * FROM doctor_profiles WHERE user_id = ? LIMIT 1");
+    $stmt->execute([$user_id]);
+    $profile = $stmt->fetch();
+
+    return $profile ?: null;
+}
+
+function is_doctor_verified(int $user_id): bool
+{
+    $profile = get_doctor_profile($user_id);
+    return $profile && ($profile['verification_status'] ?? '') === 'verified';
+}
+
+function require_verified_doctor(): void
+{
+    require_login();
+    require_role('doctor');
+
+    $u = current_user();
+    if (!$u || !is_doctor_verified((int)$u['id'])) {
+        auth_init();
+        $_SESSION['doctor_notice'] = 'Only verified doctors can access patient concern management.';
+        redirect('/doctor/dashboard.php');
+    }
+}
+
 function logout_user(): void
 {
     auth_init();

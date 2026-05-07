@@ -9,9 +9,10 @@ require_role('admin');
 
 $stats = [
   'users' => 0,
+  'doctors' => 0,
+  'doctors_pending' => 0,
   'products' => 0,
   'categories' => 0,
-  'concerns_pending' => 0,
   'orders' => 0,
   'payments_success' => 0,
   'payments_pending' => 0,
@@ -19,26 +20,16 @@ $stats = [
 
 try {
   $stats['users'] = (int)db()->query("SELECT COUNT(*) FROM users WHERE role='user'")->fetchColumn();
+  $stats['doctors'] = (int)db()->query("SELECT COUNT(*) FROM users WHERE role='doctor'")->fetchColumn();
+  $stats['doctors_pending'] = (int)db()->query("SELECT COUNT(*) FROM doctor_profiles WHERE verification_status='pending'")->fetchColumn();
   $stats['products'] = (int)db()->query("SELECT COUNT(*) FROM products")->fetchColumn();
   $stats['categories'] = (int)db()->query("SELECT COUNT(*) FROM categories")->fetchColumn();
-  $stats['concerns_pending'] = (int)db()->query("SELECT COUNT(*) FROM patient_concerns WHERE status='pending'")->fetchColumn();
   $stats['orders'] = (int)db()->query("SELECT COUNT(*) FROM orders")->fetchColumn();
   $stats['payments_success'] = (int)db()->query("SELECT COUNT(*) FROM orders WHERE payment_status='paid'")->fetchColumn();
   $stats['payments_pending'] = (int)db()->query("SELECT COUNT(*) FROM orders WHERE payment_status IN ('unpaid','pending')")->fetchColumn();
 } catch (Exception $e) {
   // keep dashboard usable
 }
-
-$latestConcerns = [];
-try {
-  $latestConcerns = db()->query("
-    SELECT pc.id, pc.disease_name, pc.severity, pc.status, pc.created_at, u.full_name
-    FROM patient_concerns pc
-    JOIN users u ON u.id = pc.user_id
-    ORDER BY pc.id DESC
-    LIMIT 6
-  ")->fetchAll();
-} catch (Exception $e) {}
 
 $latestProducts = [];
 try {
@@ -70,7 +61,7 @@ function badge_cstatus($st) {
   <div>
     <div class="ea-page-kicker">eAyurvedic Admin</div>
     <h1 class="ea-page-title">Admin Dashboard</h1>
-    <p class="ea-page-subtitle">Monitor the store, manage the consultation queue, and keep categories and medicines organized from one unified admin workspace.</p>
+    <p class="ea-page-subtitle">Monitor the store, verify doctors, and keep categories and medicines organized from one unified admin workspace.</p>
   </div>
 </section>
 
@@ -99,8 +90,15 @@ function badge_cstatus($st) {
   <div class="col-md-6 col-xl-3">
     <div class="ea-stat-card">
       <div class="ea-stat-icon"><i class="bi bi-heart-pulse"></i></div>
-      <div class="ea-stat-label">Pending Concerns</div>
-      <div class="ea-stat-value"><?= (int)$stats['concerns_pending'] ?></div>
+      <div class="ea-stat-label">Doctors</div>
+      <div class="ea-stat-value"><?= (int)$stats['doctors'] ?></div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="ea-stat-card">
+      <div class="ea-stat-icon"><i class="bi bi-file-earmark-check"></i></div>
+      <div class="ea-stat-label">Doctor Requests</div>
+      <div class="ea-stat-value"><?= (int)$stats['doctors_pending'] ?></div>
     </div>
   </div>
   <div class="col-md-6 col-xl-3">
@@ -127,56 +125,7 @@ function badge_cstatus($st) {
 </div>
 
 <div class="row g-4">
-  <div class="col-lg-7">
-    <div class="ea-panel h-100">
-      <div class="ea-panel-header">
-        <div>
-          <h2 class="ea-panel-title">Recent Concerns</h2>
-          <p class="ea-panel-subtitle">Latest patient submissions waiting for review or already updated with a solution.</p>
-        </div>
-        <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/admin/concerns_list.php">View All</a>
-      </div>
-
-      <?php if (!$latestConcerns): ?>
-        <div class="ea-empty-state">
-          <span class="ea-icon-pill"><i class="bi bi-clipboard2-heart"></i></span>
-          <h3>No concerns yet</h3>
-          <p>Submitted patient concerns will appear here once the consultation feature is used.</p>
-        </div>
-      <?php else: ?>
-        <div class="ea-table-wrap shadow-none">
-          <div class="table-responsive shadow-none">
-            <table class="table ea-table align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>User</th>
-                  <th>Disease</th>
-                  <th>Severity</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php foreach ($latestConcerns as $c): ?>
-                  <tr>
-                    <td><?= (int)$c['id'] ?></td>
-                    <td><?= e($c['full_name'] ?? '-') ?></td>
-                    <td><?= e($c['disease_name'] ?? '-') ?></td>
-                    <td><?= badge_sev($c['severity'] ?? 'mild') ?></td>
-                    <td><?= badge_cstatus($c['status'] ?? 'pending') ?></td>
-                    <td class="ea-meta"><?= e($c['created_at'] ?? '') ?></td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      <?php endif; ?>
-    </div>
-  </div>
-
-  <div class="col-lg-5">
+  <div class="col-lg-12">
     <div class="ea-panel h-100">
       <div class="ea-panel-header">
         <div>

@@ -11,6 +11,7 @@ $userHasAccountPage = file_exists(__DIR__ . '/../../user/account.php');
 $adminHasOrdersPage = file_exists(__DIR__ . '/../../admin/orders_list.php');
 $adminHasPaymentsPage = file_exists(__DIR__ . '/../../admin/payments_list.php');
 $adminHasUsersPage = file_exists(__DIR__ . '/../../admin/users_list.php');
+$adminHasDoctorsPage = file_exists(__DIR__ . '/../../admin/doctors.php');
 $brandHref = BASE_URL . '/public/index.php';
 $brandLabel = 'eAyurvedic';
 
@@ -19,6 +20,9 @@ if ($currentRole === 'user') {
 } elseif ($currentRole === 'admin') {
   $brandHref = BASE_URL . '/admin/index.php';
   $brandLabel = 'eAyurvedic Admin';
+} elseif ($currentRole === 'doctor') {
+  $brandHref = BASE_URL . '/doctor/dashboard.php';
+  $brandLabel = 'eAyurvedic Doctor';
 }
 ?>
 <!doctype html>
@@ -823,17 +827,19 @@ if ($currentRole === 'user') {
               <i class="bi bi-cart3 me-1"></i>Cart
             </a>
           </li>
-        <?php else: ?>
+        <?php elseif ($currentRole === 'admin'): ?>
           <li class="nav-item">
             <a class="nav-link" href="<?= BASE_URL ?>/admin/index.php">
               <i class="bi bi-speedometer2 me-1"></i>Dashboard
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="<?= BASE_URL ?>/admin/concerns_list.php">
-              <i class="bi bi-clipboard2-heart me-1"></i>Concerns
-            </a>
-          </li>
+          <?php if ($adminHasDoctorsPage): ?>
+            <li class="nav-item">
+              <a class="nav-link" href="<?= BASE_URL ?>/admin/doctors.php">
+                <i class="bi bi-heart-pulse me-1"></i>Manage Doctors
+              </a>
+            </li>
+          <?php endif; ?>
           <li class="nav-item">
             <a class="nav-link" href="<?= BASE_URL ?>/admin/categories_list.php">
               <i class="bi bi-grid-3x3-gap me-1"></i>Categories
@@ -865,6 +871,27 @@ if ($currentRole === 'user') {
               </a>
             </li>
           <?php endif; ?>
+        <?php elseif ($currentRole === 'doctor'): ?>
+          <li class="nav-item">
+            <a class="nav-link" href="<?= BASE_URL ?>/doctor/dashboard.php">
+              <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="<?= BASE_URL ?>/doctor/register_profile.php">
+              <i class="bi bi-file-earmark-medical me-1"></i>Registration
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="<?= BASE_URL ?>/doctor/concerns.php">
+              <i class="bi bi-clipboard2-heart me-1"></i>Patient Concerns
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="<?= BASE_URL ?>/doctor/profile.php">
+              <i class="bi bi-person-vcard me-1"></i>Profile
+            </a>
+          </li>
         <?php endif; ?>
       </ul>
 
@@ -878,8 +905,8 @@ if ($currentRole === 'user') {
           </li>
 
           <li class="nav-item">
-            <a class="btn ea-btn-gold btn-sm fw-semibold" href="<?= BASE_URL ?>/public/register.php">
-              <i class="bi bi-person-plus me-1"></i>Register
+            <a class="btn ea-btn-gold btn-sm fw-semibold" href="<?= BASE_URL ?>/public/signup.php">
+              <i class="bi bi-person-plus me-1"></i>Signup
             </a>
           </li>
 
@@ -939,11 +966,13 @@ if ($currentRole === 'user') {
                     <i class="bi bi-speedometer2 me-2"></i>Dashboard
                   </a>
                 </li>
-                <li>
-                  <a class="dropdown-item" href="<?= BASE_URL ?>/admin/concerns_list.php">
-                    <i class="bi bi-clipboard2-heart me-2"></i>Concerns
-                  </a>
-                </li>
+                <?php if ($adminHasDoctorsPage): ?>
+                  <li>
+                    <a class="dropdown-item" href="<?= BASE_URL ?>/admin/doctors.php">
+                      <i class="bi bi-heart-pulse me-2"></i>Manage Doctors
+                    </a>
+                  </li>
+                <?php endif; ?>
                 <li>
                   <a class="dropdown-item" href="<?= BASE_URL ?>/admin/categories_list.php">
                     <i class="bi bi-grid-3x3-gap me-2"></i>Categories
@@ -975,6 +1004,28 @@ if ($currentRole === 'user') {
                     </a>
                   </li>
                 <?php endif; ?>
+                <li><hr class="dropdown-divider"></li>
+              <?php elseif (($u['role'] ?? '') === 'doctor'): ?>
+                <li>
+                  <a class="dropdown-item" href="<?= BASE_URL ?>/doctor/dashboard.php">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="<?= BASE_URL ?>/doctor/register_profile.php">
+                    <i class="bi bi-file-earmark-medical me-2"></i>Registration
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="<?= BASE_URL ?>/doctor/concerns.php">
+                    <i class="bi bi-clipboard2-heart me-2"></i>Patient Concerns
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="<?= BASE_URL ?>/doctor/profile.php">
+                    <i class="bi bi-person-vcard me-2"></i>Profile
+                  </a>
+                </li>
                 <li><hr class="dropdown-divider"></li>
               <?php endif; ?>
 
